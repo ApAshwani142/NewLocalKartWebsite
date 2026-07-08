@@ -158,7 +158,7 @@ export default function ProductCard({ product, layout = 'vertical' }) {
       className="bg-white rounded-[28px] border border-gray-100/70 p-4.5 flex flex-col justify-between transition duration-300 shadow-card group hover:border-emerald-100"
     >
       {/* Image & Badges */}
-      <div className="w-full h-44 rounded-2xl bg-gray-50 flex items-center justify-center relative overflow-hidden mb-4 p-4 border border-gray-100/30">
+      <div className="w-full h-44 rounded-2xl bg-gray-50 flex items-center justify-center relative overflow-hidden mb-4 border border-gray-100/30">
         {product.discount > 0 && (
           <motion.span 
             initial={{ scale: 0.8, opacity: 0 }}
@@ -183,7 +183,7 @@ export default function ProductCard({ product, layout = 'vertical' }) {
             transition={{ duration: 0.3 }}
             src={product.image}
             alt={product.name}
-            className="max-h-full max-w-full object-contain"
+            className="w-full h-full object-cover"
           />
         </Link>
       </div>

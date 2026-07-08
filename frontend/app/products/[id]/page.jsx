@@ -358,7 +358,7 @@ export default function ProductDetailPage({ params }) {
               {/* Delivery checker notification banners */}
               {deliveryStatus === 'available' && (
                 <p className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-                  <Check size={14} className="stroke-[3]" /> Delivery available in 40 mins at your address! (Hyperlocal Ara Partner Store)
+                  <Check size={14} className="stroke-[3]" /> Delivery available in 40 mins at your address! (Hyperlocal Partner Store)
                 </p>
               )}
               {deliveryStatus === 'delayed' && (
@@ -368,7 +368,7 @@ export default function ProductDetailPage({ params }) {
               )}
               {deliveryStatus === 'unavailable' && (
                 <p className="text-xs text-red-500 font-bold flex items-center gap-1">
-                  ❌ Delivery not available at this pincode (We currently serve Ara, Bihar area only).
+                  ❌ Delivery not available at this pincode (We currently serve Bihar area only).
                 </p>
               )}
             </div>

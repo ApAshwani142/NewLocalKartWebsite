@@ -65,7 +65,7 @@ export default function LoginPage() {
           
           <div className="bg-white/10 border border-white/10 px-3.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5 mt-2">
             <Store size={13} className="text-emerald-300" />
-            Serving Ara, Bihar
+            Serving Bihar
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
               <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
                 <Store size={14} />
               </span>
-              50+ shops in Ara, Bihar
+              500+ shops in Bihar
             </li>
             <li className="flex items-center gap-3.5">
               <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
@@ -110,15 +110,15 @@ export default function LoginPage() {
         {/* Bottom section: Stats footer row */}
         <div className="w-full grid grid-cols-3 border-t border-white/10 pt-6 gap-2 text-center md:text-left">
           <div>
-            <p className="text-lg lg:text-xl font-black text-white">5,000+</p>
+            <p className="text-lg lg:text-xl font-black text-white">50,000+</p>
             <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Happy Customers</p>
           </div>
           <div>
-            <p className="text-lg lg:text-xl font-black text-white">50+</p>
+            <p className="text-lg lg:text-xl font-black text-white">500+</p>
             <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Local Shops</p>
           </div>
           <div>
-            <p className="text-lg lg:text-xl font-black text-white">60 min</p>
+            <p className="text-lg lg:text-xl font-black text-white">40 min</p>
             <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Avg Delivery</p>
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function LoginPage() {
               <Shield size={12} className="text-emerald-500 fill-emerald-500/10" /> Secure Login
             </span>
             <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
-              <MapPin size={12} className="text-[#f27a21]" /> Ara, Bihar
+              <MapPin size={12} className="text-[#f27a21]" /> Bihar
             </span>
             <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
               <Zap size={12} className="text-emerald-500 fill-emerald-500/10" /> Instant Access

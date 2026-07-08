@@ -20,7 +20,7 @@ export default function Footer() {
             </span>
           </div>
           <p className="text-sm leading-relaxed text-gray-500 max-w-sm">
-            Hyperlocal grocery & essentials same-hour delivery from verified local shops in Ara, Bihar. Empowering local stores.
+            Hyperlocal grocery & essentials same-hour delivery from verified local shops in Bihar. Empowering local stores.
           </p>
           <div className="flex items-center gap-3.5 mt-2">
             {['FB', 'IG', 'TW'].map((social) => (
@@ -75,7 +75,7 @@ export default function Footer() {
           <ul className="flex flex-col gap-4 text-sm font-semibold">
             <li className="flex items-start gap-3">
               <MapPin size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-              <span>Ara, Bihar, India - 801101</span>
+              <span>Bihar, India - 801101</span>
             </li>
             <li className="flex items-center gap-3">
               <Phone size={18} className="text-emerald-500 shrink-0" />

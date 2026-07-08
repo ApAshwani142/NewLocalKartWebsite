@@ -23,7 +23,7 @@ export default function Hero() {
           </h1>
           
           <p className="text-gray-500 font-medium text-sm md:text-base max-w-lg leading-relaxed">
-            Buy your daily needs from Ara's top local stores. Farm-fresh vegetables, dairy, bakery, meat, and essentials shipped directly in under 40 minutes.
+            Buy your daily needs from top local stores. Farm-fresh vegetables, dairy, bakery, meat, and essentials shipped directly in under 40 minutes.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mt-2">
@@ -80,7 +80,7 @@ export default function Hero() {
             <span className="text-lg bg-red-50 p-1.5 rounded-xl">📍</span>
             <div className="text-left leading-tight">
               <p className="text-[9px] text-gray-400 font-extrabold tracking-wider uppercase">Local Stores</p>
-              <p className="text-xs font-black text-brand-dark">Ara Partners</p>
+              <p className="text-xs font-black text-brand-dark">Local Partners</p>
             </div>
           </div>
         </div>

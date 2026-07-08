@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
-import CategorySidebar from '@/components/CategorySidebar';
 import CategorySlider from '@/components/CategorySlider';
 import PromoCards from '@/components/PromoCards';
 import DealOfTheDay from '@/components/DealOfTheDay';
@@ -83,20 +82,10 @@ export default function Home() {
       <Hero />
 
       {/* Main Body Grid */}
-      <main className="w-full max-w-[95%] mx-auto px-4 md:px-6 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="w-full max-w-[95%] mx-auto px-4 md:px-6 py-8">
         
-        {/* Left Side: Category Sidebar */}
-        <aside className="w-full lg:w-1/4 shrink-0">
-          <div className="sticky top-6">
-            <CategorySidebar
-              selectedCategory={selectedCategory}
-              onSelectCategory={(catId) => setSelectedCategory(catId)}
-            />
-          </div>
-        </aside>
-
-        {/* Right Side: Primary Content Stream */}
-        <div className="flex-1 flex flex-col gap-10">
+        {/* Primary Content Stream */}
+        <div className="w-full flex flex-col gap-10">
           {/* Browse Category Row */}
           <CategorySlider
             selectedCategory={selectedCategory}
@@ -115,7 +104,7 @@ export default function Home() {
                   Popular Products
                 </h2>
                 <p className="text-xs text-gray-400 font-bold tracking-wide mt-1">
-                  Ara's highest selling groceries today
+                  Highest selling groceries today
                 </p>
               </div>
               <button 
@@ -127,7 +116,7 @@ export default function Home() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {[...Array(6)].map((_, i) => (
                   <div key={i} className="bg-white rounded-3xl h-72 animate-pulse border border-gray-100/50" />
                 ))}
@@ -138,7 +127,7 @@ export default function Home() {
                 <p className="text-sm font-bold">No products found in this category.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {popularProducts.map((product) => (
                   <ProductCard key={product._id} product={product} layout="vertical" />
                 ))}

@@ -45,7 +45,9 @@ const ProductSchema = new mongoose.Schema({
       'Beverages',
       'Personal Care',
       'Home Care',
-      'Organics'
+      'Organics',
+      'Cloth',
+      'Electronic'
     ]
   },
   description: {

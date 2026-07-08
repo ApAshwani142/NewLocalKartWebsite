@@ -64,7 +64,7 @@ const seedProducts = async (req, res) => {
       {
         name: 'Organic Green Broccoli',
         category: 'Vegetables',
-        description: 'Premium quality fresh green broccoli, rich in vitamins C and K, sourced directly from local organic farms in Ara, Bihar.',
+        description: 'Premium quality fresh green broccoli, rich in vitamins C and K, sourced directly from local organic farms in Bihar.',
         price: 80,
         originalPrice: 110,
         discount: 28,
@@ -118,7 +118,7 @@ const seedProducts = async (req, res) => {
       {
         name: 'Fresh Milk Bottle',
         category: 'Dairy & Eggs',
-        description: 'Pure pasteurized farm fresh milk, rich in calcium and vitamin D. Delivered fresh daily from our partner dairies in Ara.',
+        description: 'Pure pasteurized farm fresh milk, rich in calcium and vitamin D. Delivered fresh daily from our partner dairies.',
         price: 60,
         originalPrice: 65,
         discount: 7,
@@ -252,6 +252,60 @@ const seedProducts = async (req, res) => {
         rating: 4.5,
         unit: '500ml',
         stock: 75,
+        isTrending: false
+      },
+      // Cloth
+      {
+        name: 'Classic Cotton T-Shirt',
+        category: 'Cloth',
+        description: '100% premium combed cotton t-shirt. Soft, breathable, and pre-shrunk for the perfect fit.',
+        price: 350,
+        originalPrice: 499,
+        discount: 30,
+        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400',
+        rating: 4.5,
+        unit: '1 Item',
+        stock: 25,
+        isTrending: false
+      },
+      {
+        name: 'Denim Jacket Classic',
+        category: 'Cloth',
+        description: 'Classic rugged denim jacket with button closures. Stylish and versatile for all seasons.',
+        price: 850,
+        originalPrice: 1200,
+        discount: 29,
+        image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=400',
+        rating: 4.7,
+        unit: '1 Item',
+        stock: 15,
+        isTrending: false
+      },
+      // Electronic
+      {
+        name: 'Wireless Bluetooth Earbuds',
+        category: 'Electronic',
+        description: 'True wireless stereo earbuds with touch controls, premium sound, and up to 20 hours of battery life.',
+        price: 699,
+        originalPrice: 999,
+        discount: 30,
+        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
+        rating: 4.6,
+        unit: '1 Unit',
+        stock: 40,
+        isTrending: false
+      },
+      {
+        name: 'Premium Smart Watch',
+        category: 'Electronic',
+        description: 'Sleek smart fitness watch with heart rate monitor, sleep tracking, and daily activity stats.',
+        price: 1299,
+        originalPrice: 1999,
+        discount: 35,
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
+        rating: 4.8,
+        unit: '1 Unit',
+        stock: 20,
         isTrending: false
       }
     ];

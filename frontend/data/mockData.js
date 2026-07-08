@@ -8,7 +8,9 @@ export const CATEGORIES = [
   { id: 'Beverages', name: 'Beverages', count: 14, icon: '🥤', image: 'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?q=80&w=200' },
   { id: 'Personal Care', name: 'Personal Care', count: 18, icon: '🧴', image: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=200' },
   { id: 'Home Care', name: 'Home Care', count: 22, icon: '🧹', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=200' },
-  { id: 'Organics', name: 'Organics', count: 10, icon: '🌱', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200' }
+  { id: 'Organics', name: 'Organics', count: 10, icon: '🌱', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200' },
+  { id: 'Cloth', name: 'Cloth', count: 4, icon: '👕', image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=200' },
+  { id: 'Electronic', name: 'Electronic', count: 4, icon: '⚡', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200' }
 ];
 
 export const PROMOS = [
@@ -188,5 +190,53 @@ export const PRODUCTS = [
     stock: 40,
     isTrending: true,
     isDealOfTheDay: true
+  },
+  {
+    _id: 'prod13',
+    name: 'Classic Cotton T-Shirt',
+    category: 'Cloth',
+    price: 350,
+    originalPrice: 499,
+    discount: 30,
+    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400',
+    rating: 4.5,
+    unit: '1 Item',
+    stock: 25
+  },
+  {
+    _id: 'prod14',
+    name: 'Denim Jacket Classic',
+    category: 'Cloth',
+    price: 850,
+    originalPrice: 1200,
+    discount: 29,
+    image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=400',
+    rating: 4.7,
+    unit: '1 Item',
+    stock: 15
+  },
+  {
+    _id: 'prod15',
+    name: 'Wireless Bluetooth Earbuds',
+    category: 'Electronic',
+    price: 699,
+    originalPrice: 999,
+    discount: 30,
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
+    rating: 4.6,
+    unit: '1 Unit',
+    stock: 40
+  },
+  {
+    _id: 'prod16',
+    name: 'Premium Smart Watch',
+    category: 'Electronic',
+    price: 1299,
+    originalPrice: 1999,
+    discount: 35,
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
+    rating: 4.8,
+    unit: '1 Unit',
+    stock: 20
   }
 ];

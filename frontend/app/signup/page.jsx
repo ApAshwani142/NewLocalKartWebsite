@@ -110,7 +110,7 @@ export default function SignupPage() {
 
           <div className="bg-white/10 border border-white/10 px-3.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5 mt-2">
             <Store size={13} className="text-emerald-300" />
-            Serving Ara, Bihar
+            Serving Bihar
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export default function SignupPage() {
               <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
                 <Store size={14} />
               </span>
-              50+ shops in Ara, Bihar
+              50+ shops in Bihar
             </li>
             <li className="flex items-center gap-3.5">
               <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
@@ -377,7 +377,7 @@ export default function SignupPage() {
               <Shield size={12} className="text-emerald-500 fill-emerald-500/10" /> Secure Login
             </span>
             <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
-              <MapPin size={12} className="text-[#f27a21]" /> Ara, Bihar
+              <MapPin size={12} className="text-[#f27a21]" /> Bihar
             </span>
             <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
               <Zap size={12} className="text-emerald-500 fill-emerald-500/10" /> Instant Access

@@ -121,7 +121,7 @@ export default function ChatbotPage() {
 
   const SUGGESTED_PROMPTS = [
     { label: 'What is e-LocalKart?', text: 'What is e-LocalKart?' },
-    { label: 'Do you deliver in Ara?', text: 'Do you deliver in Ara, Bihar?' },
+    { label: 'Do you deliver here?', text: 'Do you deliver in Bihar?' },
     { label: 'How fast is delivery?', text: 'How long does delivery take?' },
     { label: 'What items can I buy?', text: 'What products and categories do you offer?' }
   ];

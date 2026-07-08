@@ -39,7 +39,7 @@ export default function AddressesPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('Ara');
+  const [city, setCity] = useState('');
   const [state, setState] = useState('Bihar');
   const [postalCode, setPostalCode] = useState('');
   const [addressType, setAddressType] = useState('Home'); // Home, Work, Other

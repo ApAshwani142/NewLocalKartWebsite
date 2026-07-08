@@ -20,7 +20,7 @@ export default function CartModal({ isOpen, onClose }) {
     totalPrice
   } = useCart();
 
-  const [address, setAddress] = useState('Ara, Bihar, India - 801101');
+  const [address, setAddress] = useState('Bihar, India - 801101');
   const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' or 'Razorpay'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

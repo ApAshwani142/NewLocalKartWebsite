@@ -136,7 +136,7 @@ export default function ContactPage() {
             {/* Left Block: Contact Details (2 columns) */}
             <div className="lg:col-span-2 flex flex-col gap-6 w-full">
               
-              {/* Ara Store Location Card */}
+              {/* Store Location Card */}
               <motion.div 
                 variants={cardVariants}
                 whileHover={{ y: -4 }}
@@ -147,7 +147,7 @@ export default function ContactPage() {
                     HYPERLOCAL BRANCH
                   </span>
                   <h3 className="text-xl font-black text-[#0e3e26] tracking-tight mt-2.5">
-                    Ara Partner Store
+                    Local Partner Store
                   </h3>
                   <p className="text-[10px] text-gray-400 font-bold tracking-wide uppercase mt-0.5">
                     Central Fulfillment & Support Center
@@ -161,7 +161,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-gray-900 font-black mb-0.5">Physical Address</p>
-                      <p className="leading-relaxed">Shop No 12, Market Square, Block Road, Ara, Bihar - 801101</p>
+                      <p className="leading-relaxed">Shop No 12, Market Square, Block Road, Bihar - 801101</p>
                     </div>
                   </motion.div>
 
@@ -196,7 +196,7 @@ export default function ContactPage() {
                 className="bg-white rounded-3xl border border-gray-100 shadow-premium overflow-hidden h-64 relative flex flex-col justify-end p-0 transition duration-300"
               >
                 <iframe
-                  title="Ara Office Location Map"
+                  title="Office Location Map"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -210,7 +210,7 @@ export default function ContactPage() {
                 {/* Floating Map Navigation Badge */}
                 <div className="absolute bottom-3 left-3 right-3 bg-white/90 backdrop-blur-md p-3 rounded-2xl border border-gray-100/70 flex items-center justify-between shadow-premium z-10">
                   <div className="text-left leading-tight">
-                    <p className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-widest">Ara Headquarters</p>
+                    <p className="text-[9px] text-emerald-600 font-extrabold uppercase tracking-widest">Bihar Headquarters</p>
                     <p className="text-[11px] text-gray-800 font-black mt-0.5">e-LocalKart Office</p>
                   </div>
                   <a

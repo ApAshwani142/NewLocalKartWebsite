@@ -253,7 +253,7 @@ const sendOtp = async (req, res) => {
           
           <div class="footer">
             This verification email was sent automatically from the e-LocalKart server.<br>
-            &copy; 2026 e-LocalKart, Ara, Bihar, India
+            &copy; 2026 e-LocalKart, Bihar, India
           </div>
         </div>
       </body>
