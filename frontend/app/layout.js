@@ -2,6 +2,7 @@ import { Outfit, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
+import { ThemeProvider } from "@/hooks/useTheme";
 import ChatbotWidget from "@/components/ChatbotWidget";
 
 const outfit = Outfit({
@@ -24,13 +25,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
-      <body className="bg-[#f9fafb] text-gray-800 font-sans antialiased min-h-screen flex flex-col">
-        <AuthProvider>
-          <CartProvider>
-            {children}
-            <ChatbotWidget />
-          </CartProvider>
-        </AuthProvider>
+      <body className="font-sans antialiased min-h-screen flex flex-col">
+        <ThemeProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+              <ChatbotWidget />
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

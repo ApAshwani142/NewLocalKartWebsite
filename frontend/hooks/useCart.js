@@ -76,8 +76,8 @@ export const CartProvider = ({ children }) => {
   const cartCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
 
-  // No shipping fee above Rs. 200, else Rs. 40
-  const deliveryFee = subtotal === 0 ? 0 : subtotal >= 200 ? 0 : 40;
+  // No shipping fee above Rs. 100, else Rs. 40
+  const deliveryFee = subtotal === 0 ? 0 : subtotal >= 100 ? 0 : 40;
   
   // Tax (approx. 5% for GST)
   const tax = Math.round(subtotal * 0.05 * 100) / 100;
