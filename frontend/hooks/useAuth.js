@@ -94,14 +94,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, phone, password, otp) => {
+  const signup = async (name, email, phone, password, otp, role = 'customer') => {
     try {
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name, email, phone, password, otp })
+        body: JSON.stringify({ name, email, phone, password, otp, role })
       });
 
       const data = await res.json();
@@ -117,11 +117,34 @@ export const AuthProvider = ({ children }) => {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        role: data.role
+        role: data.role,
+        fcmToken: data.fcmToken
       });
-      return { success: true };
+      return { success: true, user: data };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  };
+
+  const updateFcmToken = async (fcmToken) => {
+    if (!token) return { success: false, error: 'Not authenticated' };
+    try {
+      const res = await fetch(`${API_URL}/auth/fcm-token`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ fcmToken })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev) => (prev ? { ...prev, fcmToken: data.fcmToken } : prev));
+        return { success: true };
+      }
+      return { success: false, error: data.message };
+    } catch (err) {
+      return { success: false, error: err.message };
     }
   };
 
@@ -132,7 +155,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, sendOtp }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, sendOtp, updateFcmToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -8,15 +8,17 @@ import Footer from '@/components/Footer';
 import CartModal from '@/components/CartModal';
 import ProductCard from '@/components/ProductCard';
 import { PRODUCTS, CATEGORIES } from '@/data/mockData';
+import { useLocation } from '@/hooks/useLocation';
 import { Search, Sparkles, SlidersHorizontal, ArrowUpDown, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function ProductsCatalogContent() {
   const searchParams = useSearchParams();
+  const { location } = useLocation();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(PRODUCTS);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -27,30 +29,29 @@ function ProductsCatalogContent() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         setError(null);
-        const res = await fetch(`${API_URL}/products`);
+        const queryParams = new URLSearchParams();
+        if (location.lat) queryParams.append('lat', location.lat);
+        if (location.lng) queryParams.append('lng', location.lng);
+
+        const res = await fetch(`${API_URL}/products?${queryParams.toString()}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.length > 0) {
+          if (Array.isArray(data) && data.length > 0) {
             setProducts(data);
-          } else {
-            setProducts(PRODUCTS);
           }
-        } else {
-          setProducts(PRODUCTS);
         }
       } catch (err) {
         console.warn('Backend API connection failed, using local mock data fallback:', err.message);
-        setProducts(PRODUCTS);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [API_URL]);
+  }, [location.lat, location.lng, API_URL]);
 
   // Handle category sync from homepage params if they change
   useEffect(() => {

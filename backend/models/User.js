@@ -28,9 +28,28 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer'],
+    enum: ['customer', 'shopkeeper', 'delivery_agent', 'admin'],
     default: 'customer'
   },
+  fcmToken: {
+    type: String,
+    default: ''
+  },
+  store: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: false
+  },
+  addresses: [
+    {
+      label: { type: String, default: 'Home' },
+      street: { type: String, required: true },
+      area: { type: String, default: '' },
+      city: { type: String, default: 'Ara' },
+      pincode: { type: String, default: '802301' },
+      isDefault: { type: Boolean, default: false }
+    }
+  ],
   createdAt: {
     type: Date,
     default: Date.now

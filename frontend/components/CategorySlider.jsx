@@ -43,6 +43,10 @@ export default function CategorySlider({ selectedCategory, onSelectCategory }) {
                     transition={{ duration: 0.3 }}
                     src={cat.image}
                     alt={cat.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200';
+                    }}
                     className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0"
                   />
                   <div className="absolute inset-0 bg-brand-dark/5" />

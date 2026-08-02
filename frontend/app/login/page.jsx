@@ -190,11 +190,33 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* PART 5: Legal Agreement Notice */}
+            <p className="text-[11px] text-gray-500 font-medium text-center leading-relaxed mt-1">
+              By continuing, you agree to our{' '}
+              <a
+                href="/terms-and-conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-700 underline font-bold hover:text-emerald-900"
+              >
+                Terms & Conditions
+              </a>{' '}
+              and{' '}
+              <a
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-700 underline font-bold hover:text-emerald-900"
+              >
+                Privacy Policy
+              </a>
+            </p>
+
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#105634] hover:bg-brand-dark text-white py-3.5 mt-2 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-[#105634]/15 cursor-pointer disabled:opacity-50"
+              className="w-full bg-[#105634] hover:bg-brand-dark text-white py-3.5 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-[#105634]/15 cursor-pointer disabled:opacity-50"
             >
               {loading ? 'Signing in...' : 'Sign in ➔'}
             </button>

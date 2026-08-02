@@ -5,14 +5,16 @@ const {
   loginUser,
   getUserProfile,
   updateUserProfile,
-  sendOtp
+  sendOtp,
+  updateFcmToken
 } = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
+const { authenticateUser } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/send-otp', sendOtp);
-router.get('/me', protect, getUserProfile);
-router.put('/profile', protect, updateUserProfile);
+router.get('/me', authenticateUser, getUserProfile);
+router.put('/profile', authenticateUser, updateUserProfile);
+router.put('/fcm-token', authenticateUser, updateFcmToken);
 
 module.exports = router;

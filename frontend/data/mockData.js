@@ -228,15 +228,28 @@ export const PRODUCTS = [
     stock: 40
   },
   {
-    _id: 'prod16',
-    name: 'Premium Smart Watch',
-    category: 'Electronic',
-    price: 1299,
-    originalPrice: 1999,
-    discount: 35,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
-    rating: 4.8,
-    unit: '1 Unit',
-    stock: 20
+    _id: 'prod17',
+    name: 'Raw Organic Wildflower Honey',
+    category: 'Organics',
+    price: 320,
+    originalPrice: 400,
+    discount: 20,
+    image: 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?q=80&w=400',
+    rating: 4.9,
+    unit: '500g',
+    stock: 30
+  },
+  {
+    _id: 'prod18',
+    name: 'Organic White Quinoa Seeds',
+    category: 'Organics',
+    price: 250,
+    originalPrice: 310,
+    discount: 19,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=400',
+    rating: 4.7,
+    unit: '500g',
+    stock: 25
   }
 ];
+

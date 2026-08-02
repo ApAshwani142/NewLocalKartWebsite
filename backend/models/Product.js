@@ -27,6 +27,19 @@ const ReviewSchema = new mongoose.Schema({
 });
 
 const ProductSchema = new mongoose.Schema({
+  store: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Store',
+    required: false
+  },
+  storeName: {
+    type: String
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
   name: {
     type: String,
     required: [true, 'Please add a product name'],

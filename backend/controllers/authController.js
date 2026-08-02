@@ -43,12 +43,13 @@ const registerUser = async (req, res) => {
       await Otp.deleteOne({ _id: otpRecord._id });
     }
 
-    // Create user
+    // Create user with specified or default role
     const user = await User.create({
       name,
       email,
       phone,
-      password
+      password,
+      role: req.body.role || 'customer'
     });
 
     if (user) {
@@ -58,6 +59,7 @@ const registerUser = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        fcmToken: user.fcmToken,
         token: generateToken(user._id)
       });
     } else {
@@ -320,10 +322,37 @@ const sendOtp = async (req, res) => {
   }
 };
 
+// @desc    Update FCM token for push notifications (FCM readiness)
+// @route   PUT /api/auth/fcm-token
+// @access  Private
+const updateFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    if (!fcmToken) {
+      return res.status(400).json({ message: 'Please provide an fcmToken' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { fcmToken },
+      { new: true }
+    );
+
+    res.json({
+      message: 'FCM token registered/updated successfully',
+      fcmToken: user.fcmToken
+    });
+  } catch (error) {
+    console.error('Update FCM Token Error:', error.message);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
-  sendOtp
+  sendOtp,
+  updateFcmToken
 };

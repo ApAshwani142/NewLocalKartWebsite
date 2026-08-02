@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { LocationProvider } from "@/hooks/useLocation";
 import ChatbotWidget from "@/components/ChatbotWidget";
 
 const outfit = Outfit({
@@ -27,12 +28,14 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
       <body className="font-sans antialiased min-h-screen flex flex-col">
         <ThemeProvider>
-          <AuthProvider>
-            <CartProvider>
-              {children}
-              <ChatbotWidget />
-            </CartProvider>
-          </AuthProvider>
+          <LocationProvider>
+            <AuthProvider>
+              <CartProvider>
+                {children}
+                <ChatbotWidget />
+              </CartProvider>
+            </AuthProvider>
+          </LocationProvider>
         </ThemeProvider>
       </body>
     </html>

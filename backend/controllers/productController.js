@@ -1,12 +1,20 @@
 const Product = require('../models/Product');
+const Store = require('../models/Store');
 const Order = require('../models/Order');
+const { calculateDistance, estimateDeliveryTime } = require('../utils/locationUtils');
 
-// @desc    Get all products (with optional search and category filters)
+const DEFAULT_LAT = 25.556;
+const DEFAULT_LNG = 84.660;
+
+// @desc    Get all products (enriched with dynamic store distance & delivery time)
 // @route   GET /api/products
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const { category, search, isTrending, isDealOfTheDay } = req.query;
+    const userLat = parseFloat(req.query.lat) || DEFAULT_LAT;
+    const userLng = parseFloat(req.query.lng) || DEFAULT_LNG;
+    const { category, search, isTrending, isDealOfTheDay, storeId } = req.query;
+
     let query = {};
 
     if (category) {
@@ -21,50 +29,290 @@ const getProducts = async (req, res) => {
       query.isDealOfTheDay = isDealOfTheDay === 'true';
     }
 
+    if (storeId) {
+      query.store = storeId;
+    }
+
     if (search) {
       query.name = { $regex: search, $options: 'i' };
     }
 
-    const products = await Product.find(query);
-    res.json(products);
+    // Populate store reference
+    const products = await Product.find(query).populate('store').lean();
+
+    // Enrich products with dynamic Haversine distance and delivery time
+    const enrichedProducts = products.map((prod) => {
+      const storeObj = prod.store || {};
+      const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
+      const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
+
+      const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
+      const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
+
+      return {
+        ...prod,
+        storeId: storeObj._id,
+        storeName: storeObj.name || prod.storeName || 'Local Partner Store',
+        storeLogo: storeObj.logo,
+        storeIsOpen: storeObj.isOpen ?? true,
+        distanceKm,
+        deliveryTime,
+        isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+      };
+    });
+
+    // Sort by: Nearest Store -> Rating -> Popularity -> Price
+    enrichedProducts.sort((a, b) => {
+      if (a.distanceKm !== b.distanceKm) {
+        return a.distanceKm - b.distanceKm;
+      }
+      if (b.rating !== a.rating) {
+        return b.rating - a.rating;
+      }
+      return a.price - b.price;
+    });
+
+    res.json(enrichedProducts);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
-// @desc    Get product by ID
+// @desc    Get single product by ID (with dynamic distance & delivery time)
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const userLat = parseFloat(req.query.lat) || DEFAULT_LAT;
+    const userLng = parseFloat(req.query.lng) || DEFAULT_LNG;
 
-    if (product) {
-      res.json(product);
-    } else {
-      res.status(404).json({ message: 'Product not found' });
+    const product = await Product.findById(req.params.id).populate('store').lean();
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    const storeObj = product.store || {};
+    const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
+    const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
+
+    const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
+    const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
+
+    const enrichedProduct = {
+      ...product,
+      storeId: storeObj._id,
+      storeName: storeObj.name || product.storeName || 'Local Partner Store',
+      storeLogo: storeObj.logo,
+      storeIsOpen: storeObj.isOpen ?? true,
+      distanceKm,
+      deliveryTime,
+      isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+    };
+
+    res.json(enrichedProduct);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching product by ID:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
-// @desc    Seed initial grocery products
+// @desc    Unified Hyperlocal Search (Products, Stores & Categories)
+// @route   GET /api/products/search/all
+// @access  Public
+const searchHyperlocal = async (req, res) => {
+  try {
+    const userLat = parseFloat(req.query.lat) || DEFAULT_LAT;
+    const userLng = parseFloat(req.query.lng) || DEFAULT_LNG;
+    const q = req.query.q || '';
+
+    if (!q.trim()) {
+      return res.json({ products: [], stores: [], categories: [] });
+    }
+
+    const regex = new RegExp(q, 'i');
+
+    // Search Stores
+    const matchedStores = await Store.find({
+      $or: [{ name: regex }, { area: regex }, { city: regex }]
+    }).lean();
+
+    const enrichedStores = matchedStores.map(st => {
+      const distanceKm = calculateDistance(userLat, userLng, st.lat, st.lng);
+      const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
+      return {
+        ...st,
+        distanceKm,
+        deliveryTime,
+        isDeliverable
+      };
+    }).sort((a, b) => a.distanceKm - b.distanceKm);
+
+    // Search Products
+    const matchedProducts = await Product.find({
+      $or: [{ name: regex }, { category: regex }, { description: regex }]
+    }).populate('store').lean();
+
+    const enrichedProducts = matchedProducts.map(prod => {
+      const storeObj = prod.store || {};
+      const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
+      const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
+      const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
+      const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
+
+      return {
+        ...prod,
+        storeId: storeObj._id,
+        storeName: storeObj.name || prod.storeName || 'Local Partner Store',
+        distanceKm,
+        deliveryTime,
+        isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+      };
+    }).sort((a, b) => a.distanceKm - b.distanceKm);
+
+    // Categories matched
+    const allCategories = [
+      'Vegetables', 'Fruits', 'Dairy & Eggs', 'Meat & Fish',
+      'Fresh Bread', 'Snacks', 'Beverages', 'Personal Care',
+      'Home Care', 'Organics', 'Cloth', 'Electronic'
+    ];
+    const matchedCategories = allCategories.filter(c => c.toLowerCase().includes(q.toLowerCase()));
+
+    res.json({
+      products: enrichedProducts,
+      stores: enrichedStores,
+      categories: matchedCategories
+    });
+  } catch (error) {
+    console.error('Error performing search:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
+// @desc    Seed initial stores and products
 // @route   POST /api/products/seed
 // @access  Public
 const seedProducts = async (req, res) => {
   try {
-    // Delete existing products
     await Product.deleteMany();
+    await Store.deleteMany();
 
-    const sampleProducts = [
-      // Vegetables
+    // 1. Create sample stores with coordinates around Ara & Patna
+    const createdStores = await Store.insertMany([
       {
+        name: 'Gupta Kirana & General Store',
+        tagline: 'Fresh Groceries & Daily Needs',
+        logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=800',
+        address: 'Shop #12, Station Road',
+        city: 'Ara',
+        area: 'Station Road',
+        pincode: '802301',
+        lat: 25.5580,
+        lng: 84.6620,
+        rating: 4.9,
+        numRatings: 184,
+        isOpen: true,
+        categories: ['Vegetables', 'Fruits', 'Dairy & Eggs', 'Snacks']
+      },
+      {
+        name: 'SuperBazar Hyperlocal',
+        tagline: 'Everything under one roof in 15 mins',
+        logo: 'https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=800',
+        address: 'Plot 45, Grand Trunk Road',
+        city: 'Ara',
+        area: 'Grand Trunk Road',
+        pincode: '802301',
+        lat: 25.5520,
+        lng: 84.6560,
+        rating: 4.8,
+        numRatings: 230,
+        isOpen: true,
+        categories: ['Vegetables', 'Beverages', 'Snacks', 'Home Care']
+      },
+      {
+        name: 'Verma Fresh Dairy & Bakery',
+        tagline: 'Pure Milk, Eggs & Fresh Artisan Bread',
+        logo: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=800',
+        address: 'Nawada Market, Near Gate #2',
+        city: 'Ara',
+        area: 'Nawada Market',
+        pincode: '802302',
+        lat: 25.5680,
+        lng: 84.6750,
+        rating: 4.7,
+        numRatings: 95,
+        isOpen: true,
+        categories: ['Dairy & Eggs', 'Fresh Bread']
+      },
+      {
+        name: 'City Fresh Meat & Fish Market',
+        tagline: 'Hygienic Tender Meat & Cold Chain Delivery',
+        logo: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800',
+        address: 'Dharhara Kothi Chowk',
+        city: 'Ara',
+        area: 'Dharhara Kothi',
+        pincode: '802301',
+        lat: 25.5490,
+        lng: 84.6480,
+        rating: 4.6,
+        numRatings: 78,
+        isOpen: true,
+        categories: ['Meat & Fish']
+      },
+      {
+        name: 'Apex Electronics & Accessories',
+        tagline: 'Mobiles, Chargers & Smart Gadgets Express',
+        logo: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?q=80&w=800',
+        address: 'Collectorate Road, Civil Lines',
+        city: 'Ara',
+        area: 'Civil Lines',
+        pincode: '802301',
+        lat: 25.5610,
+        lng: 84.6680,
+        rating: 4.8,
+        numRatings: 112,
+        isOpen: true,
+        categories: ['Electronic']
+      },
+      {
+        name: 'Patliputra Organics & Gourmet',
+        tagline: 'Premium Farm Fresh Organic Produce',
+        logo: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=200',
+        banner: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?q=80&w=800',
+        address: 'Boring Road, Patna',
+        city: 'Patna',
+        area: 'Boring Road',
+        pincode: '800001',
+        lat: 25.6120,
+        lng: 85.1250,
+        rating: 4.9,
+        numRatings: 310,
+        isOpen: true,
+        categories: ['Organics', 'Fruits', 'Beverages']
+      }
+    ]);
+
+    const storeGupta = createdStores[0]._id;
+    const storeSuper = createdStores[1]._id;
+    const storeVerma = createdStores[2]._id;
+    const storeMeat = createdStores[3]._id;
+    const storeApex = createdStores[4]._id;
+    const storePatliputra = createdStores[5]._id;
+
+    // 2. Sample products linked to stores
+    const sampleProducts = [
+      {
+        store: storeGupta,
+        storeName: 'Gupta Kirana & General Store',
         name: 'Organic Green Broccoli',
         category: 'Vegetables',
-        description: 'Premium quality fresh green broccoli, rich in vitamins C and K, sourced directly from local organic farms in Bihar.',
+        description: 'Premium quality fresh green broccoli, rich in vitamins C and K, sourced directly from local organic farms.',
         price: 80,
         originalPrice: 110,
         discount: 28,
@@ -72,12 +320,14 @@ const seedProducts = async (req, res) => {
         rating: 4.8,
         unit: '500g',
         stock: 50,
-        isTrending: false
+        isTrending: true
       },
       {
+        store: storeGupta,
+        storeName: 'Gupta Kirana & General Store',
         name: 'Fresh Red Tomatoes',
         category: 'Vegetables',
-        description: 'Farm-fresh juicy red tomatoes, handpicked at peak ripeness. Packed with nutrition and ideal for daily salads, gravies, and soups.',
+        description: 'Farm-fresh juicy red tomatoes, handpicked at peak ripeness. Ideal for daily salads, gravies, and soups.',
         price: 40,
         originalPrice: 60,
         discount: 33,
@@ -85,9 +335,11 @@ const seedProducts = async (req, res) => {
         rating: 4.6,
         unit: '1 kg',
         stock: 60,
-        isTrending: false
+        isTrending: true
       },
       {
+        store: storeSuper,
+        storeName: 'SuperBazar Hyperlocal',
         name: 'Fresh Potatoes',
         category: 'Vegetables',
         description: 'Freshly harvested, locally-grown potatoes. High quality, thin-skinned, and perfect for boiling, baking, or frying.',
@@ -100,11 +352,12 @@ const seedProducts = async (req, res) => {
         stock: 100,
         isTrending: false
       },
-      // Fruits
       {
+        store: storePatliputra,
+        storeName: 'Patliputra Organics & Gourmet',
         name: 'Red Delicious Apples',
         category: 'Fruits',
-        description: 'Crisp, sweet, and premium quality red delicious apples. Sourced from the cold valleys of Kashmir, washed, and packed safely.',
+        description: 'Crisp, sweet, and premium quality red delicious apples. Sourced from cold valleys, washed, and packed safely.',
         price: 120,
         originalPrice: 160,
         discount: 25,
@@ -112,13 +365,14 @@ const seedProducts = async (req, res) => {
         rating: 4.7,
         unit: '1 kg',
         stock: 40,
-        isTrending: false
+        isTrending: true
       },
-      // Dairy & Eggs
       {
-        name: 'Fresh Milk Bottle',
+        store: storeVerma,
+        storeName: 'Verma Fresh Dairy & Bakery',
+        name: 'Fresh Pure Milk Bottle',
         category: 'Dairy & Eggs',
-        description: 'Pure pasteurized farm fresh milk, rich in calcium and vitamin D. Delivered fresh daily from our partner dairies.',
+        description: 'Pure pasteurized farm fresh milk, rich in calcium and vitamin D. Delivered fresh daily.',
         price: 60,
         originalPrice: 65,
         discount: 7,
@@ -126,12 +380,15 @@ const seedProducts = async (req, res) => {
         rating: 4.8,
         unit: '1 L',
         stock: 80,
-        isTrending: false
+        isTrending: true,
+        isDealOfTheDay: true
       },
       {
+        store: storeVerma,
+        storeName: 'Verma Fresh Dairy & Bakery',
         name: 'Farm Fresh Organic Eggs',
         category: 'Dairy & Eggs',
-        description: 'Healthy and organic eggs from free-range chickens. Rich in protein and essential nutrients. Hand-sorted for quality assurance.',
+        description: 'Healthy and organic eggs from free-range chickens. Rich in protein and essential nutrients.',
         price: 90,
         originalPrice: 100,
         discount: 10,
@@ -141,11 +398,12 @@ const seedProducts = async (req, res) => {
         stock: 35,
         isTrending: false
       },
-      // Meat & Fish
       {
+        store: storeMeat,
+        storeName: 'City Fresh Meat & Fish Market',
         name: 'Fresh Tender Chicken Breast',
         category: 'Meat & Fish',
-        description: 'Boneless, skinless raw chicken breast cuts. Hygienically processed, vacuum-packed, and shipped fresh under strict cold-chain control.',
+        description: 'Boneless, skinless raw chicken breast cuts. Hygienically processed under strict cold-chain control.',
         price: 240,
         originalPrice: 280,
         discount: 14,
@@ -155,11 +413,12 @@ const seedProducts = async (req, res) => {
         stock: 20,
         isTrending: false
       },
-      // Fresh Bread
       {
+        store: storeVerma,
+        storeName: 'Verma Fresh Dairy & Bakery',
         name: 'Whole Wheat Sandwich Bread',
         category: 'Fresh Bread',
-        description: 'Freshly baked whole wheat bread loaf. Sliced and ready to eat, packed with dietary fiber and completely preservative-free.',
+        description: 'Freshly baked whole wheat bread loaf. Sliced and ready to eat, completely preservative-free.',
         price: 45,
         originalPrice: 50,
         discount: 10,
@@ -169,11 +428,12 @@ const seedProducts = async (req, res) => {
         stock: 30,
         isTrending: false
       },
-      // Snacks
       {
-        name: 'Salted Popcorn Pack',
+        store: storeSuper,
+        storeName: 'SuperBazar Hyperlocal',
+        name: 'Salted Crispy Popcorn Pack',
         category: 'Snacks',
-        description: 'Light, crispy, and perfectly salted popcorn. The ultimate healthy snack for movies, office breaks, or evening teas.',
+        description: 'Light, crispy, and perfectly salted popcorn. The ultimate healthy snack for movie breaks.',
         price: 50,
         originalPrice: 60,
         discount: 16,
@@ -183,11 +443,12 @@ const seedProducts = async (req, res) => {
         stock: 120,
         isTrending: false
       },
-      // Beverages (Trending items matching screenshot 3)
       {
+        store: storeGupta,
+        storeName: 'Gupta Kirana & General Store',
         name: 'Pure Orange Juice Bottle',
         category: 'Beverages',
-        description: '100% natural, fresh-pressed orange juice. High in Vitamin C, completely pulp-fresh with zero artificial sweeteners or additives.',
+        description: '100% natural, fresh-pressed orange juice. High in Vitamin C with zero artificial sweeteners.',
         price: 90,
         originalPrice: 130,
         discount: 30,
@@ -199,264 +460,308 @@ const seedProducts = async (req, res) => {
         isDealOfTheDay: true
       },
       {
-        name: 'Pressed Apple Juice',
-        category: 'Beverages',
-        description: 'Cold-pressed apple juice made from handpicked crisp apples. Sweet, refreshing, and rich in natural antioxidants.',
-        price: 105,
-        originalPrice: 150,
-        discount: 30,
-        image: 'https://images.unsplash.com/photo-1576186726115-4d51596775d1?q=80&w=400',
-        rating: 4.7,
-        unit: '1 L',
-        stock: 50,
-        isTrending: true,
-        isDealOfTheDay: true
-      },
-      {
-        name: 'Organic Pomegranate Juice',
-        category: 'Beverages',
-        description: 'Freshly squeezed pomegranate juice, packed with antioxidants. A premium, tart, and fully organic drink for daily health.',
-        price: 120,
-        originalPrice: 170,
-        discount: 29,
-        image: 'https://images.unsplash.com/photo-1620992770674-133e09483855?q=80&w=400',
-        rating: 4.9,
-        unit: '1 L',
-        stock: 40,
-        isTrending: true,
-        isDealOfTheDay: true
-      },
-      // Personal Care
-      {
-        name: 'Aloe Vera Hydrating Shampoo',
-        category: 'Personal Care',
-        description: 'Gentle, pH-balanced hydrating shampoo enriched with organic Aloe Vera. Repairs dry hair, nourishes scalp, and locks in moisture.',
-        price: 199,
-        originalPrice: 250,
-        discount: 20,
-        image: 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?q=80&w=400',
-        rating: 4.6,
-        unit: '300ml',
-        stock: 45,
-        isTrending: false
-      },
-      // Home Care
-      {
-        name: 'Liquid Dishwash Gel',
-        category: 'Home Care',
-        description: 'Premium dishwashing liquid gel, formulated to cut through tough grease instantly. Soft on hands and leaves a fresh lemon fragrance.',
-        price: 115,
-        originalPrice: 130,
-        discount: 11,
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=400',
-        rating: 4.5,
-        unit: '500ml',
-        stock: 75,
-        isTrending: false
-      },
-      // Cloth
-      {
-        name: 'Classic Cotton T-Shirt',
-        category: 'Cloth',
-        description: '100% premium combed cotton t-shirt. Soft, breathable, and pre-shrunk for the perfect fit.',
-        price: 350,
+        store: storeApex,
+        storeName: 'Apex Electronics & Accessories',
+        name: 'Fast Charging USB-C Cable (65W)',
+        category: 'Electronic',
+        description: 'Heavy duty braided USB-C to USB-C 65W fast charging power delivery cable with LED indicator.',
+        price: 299,
         originalPrice: 499,
-        discount: 30,
-        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=400',
-        rating: 4.5,
-        unit: '1 Item',
-        stock: 25,
-        isTrending: false
-      },
-      {
-        name: 'Denim Jacket Classic',
-        category: 'Cloth',
-        description: 'Classic rugged denim jacket with button closures. Stylish and versatile for all seasons.',
-        price: 850,
-        originalPrice: 1200,
-        discount: 29,
-        image: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?q=80&w=400',
-        rating: 4.7,
-        unit: '1 Item',
-        stock: 15,
-        isTrending: false
-      },
-      // Electronic
-      {
-        name: 'Wireless Bluetooth Earbuds',
-        category: 'Electronic',
-        description: 'True wireless stereo earbuds with touch controls, premium sound, and up to 20 hours of battery life.',
-        price: 699,
-        originalPrice: 999,
-        discount: 30,
-        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?q=80&w=400',
-        rating: 4.6,
-        unit: '1 Unit',
-        stock: 40,
-        isTrending: false
-      },
-      {
-        name: 'Premium Smart Watch',
-        category: 'Electronic',
-        description: 'Sleek smart fitness watch with heart rate monitor, sleep tracking, and daily activity stats.',
-        price: 1299,
-        originalPrice: 1999,
-        discount: 35,
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400',
+        discount: 40,
+        image: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=400',
         rating: 4.8,
-        unit: '1 Unit',
-        stock: 20,
-        isTrending: false
+        unit: '1 Piece',
+        stock: 45,
+        isTrending: true,
+        isDealOfTheDay: true
       }
     ];
 
-    const createdProducts = await Product.insertMany(sampleProducts);
+    const seededProducts = await Product.insertMany(sampleProducts);
+
     res.status(201).json({
-      message: 'Products seeded successfully',
-      count: createdProducts.length
+      message: 'Hyperlocal Stores and Products seeded successfully',
+      storesCount: createdStores.length,
+      productsCount: seededProducts.length
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Seeding failed: ' + error.message });
+    console.error('Error seeding data:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
-// @desc    Create new review
-// @route   POST /api/products/:id/reviews
-// @access  Private
 const createProductReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
-
-    if (!rating || !comment) {
-      return res.status(400).json({ message: 'Please provide rating and comment' });
-    }
-
-    const productId = req.params.id;
-
-    // 1. Verify if the customer has purchased this product
-    const hasOrdered = await Order.findOne({
-      user: req.user._id,
-      deliveryStatus: 'Delivered',
-      'orderItems.product': productId
-    });
-
-    if (!hasOrdered) {
-      return res.status(400).json({
-        message: 'Only customers who have purchased and received this product can leave feedback.'
-      });
-    }
-
-    // 2. Find product
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    // 3. Check if user already reviewed
-    const alreadyReviewed = product.reviews.some(
-      (r) => r.user.toString() === req.user._id.toString()
-    );
-
-    if (alreadyReviewed) {
-      return res.status(400).json({
-        message: 'You have already reviewed this product. Delete your existing review to submit a new one.'
-      });
-    }
-
-    // 4. Create and push review
-    const review = {
-      user: req.user._id,
-      name: req.user.name,
-      rating: Number(rating),
-      comment
-    };
-
-    product.reviews.push(review);
-    product.numReviews = product.reviews.length;
-    
-    // Calculate new average rating
-    product.rating =
-      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
-      product.reviews.length;
-
-    await product.save();
-    res.status(201).json({ message: 'Review added successfully', product });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error: ' + error.message });
-  }
-};
-
-// @desc    Delete review
-// @route   DELETE /api/products/:id/reviews/:reviewId
-// @access  Private
-const deleteProductReview = async (req, res) => {
-  try {
     const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
 
-    const review = product.reviews.id(req.params.reviewId);
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
+    if (product) {
+      const alreadyReviewed = product.reviews.find(
+        (r) => r.user.toString() === req.user._id.toString()
+      );
 
-    // Verify ownership
-    if (review.user.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: 'Not authorized to delete this review' });
-    }
+      if (alreadyReviewed) {
+        return res.status(400).json({ message: 'Product already reviewed' });
+      }
 
-    // Remove review
-    product.reviews.pull(req.params.reviewId);
-    product.numReviews = product.reviews.length;
+      const review = {
+        name: req.user.name,
+        rating: Number(rating),
+        comment,
+        user: req.user._id
+      };
 
-    // Recalculate average rating
-    if (product.reviews.length > 0) {
+      product.reviews.push(review);
+      product.numReviews = product.reviews.length;
       product.rating =
         product.reviews.reduce((acc, item) => item.rating + acc, 0) /
         product.reviews.length;
-    } else {
-      product.rating = 4.5; // default fallback
-    }
 
-    await product.save();
-    res.json({ message: 'Review deleted successfully', product });
+      await product.save();
+      res.status(201).json({ message: 'Review added' });
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
-// @desc    Get product recommendations
-// @route   GET /api/products/:id/recommendations
-// @access  Public
+const deleteProductReview = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (product) {
+      const reviewIndex = product.reviews.findIndex(
+        (r) => r._id.toString() === req.params.reviewId
+      );
+
+      if (reviewIndex === -1) {
+        return res.status(404).json({ message: 'Review not found' });
+      }
+
+      const review = product.reviews[reviewIndex];
+      if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        return res.status(401).json({ message: 'Not authorized to delete this review' });
+      }
+
+      product.reviews.splice(reviewIndex, 1);
+      product.numReviews = product.reviews.length;
+      product.rating = product.reviews.length > 0
+        ? product.reviews.reduce((acc, item) => item.rating + acc, 0) / product.reviews.length
+        : 4.5;
+
+      await product.save();
+      res.json({ message: 'Review removed' });
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
 const getProductRecommendations = async (req, res) => {
   try {
+    const userLat = parseFloat(req.query.lat) || DEFAULT_LAT;
+    const userLng = parseFloat(req.query.lng) || DEFAULT_LNG;
+
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Recommend other products in same category (up to 4)
     let recommendations = await Product.find({
       _id: { $ne: product._id },
       category: product.category
-    }).limit(4);
+    }).populate('store').lean().limit(4);
 
-    // If less than 4, fill with other popular items
     if (recommendations.length < 4) {
       const needed = 4 - recommendations.length;
       const extraItems = await Product.find({
         _id: { $ne: product._id, $nin: recommendations.map((r) => r._id) }
-      }).limit(needed);
+      }).populate('store').lean().limit(needed);
       recommendations = [...recommendations, ...extraItems];
     }
 
-    res.json(recommendations);
+    const enriched = recommendations.map(prod => {
+      const storeObj = prod.store || {};
+      const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
+      const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
+      const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
+      const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
+      return {
+        ...prod,
+        storeId: storeObj._id,
+        storeName: storeObj.name || prod.storeName || 'Local Partner Store',
+        distanceKm,
+        deliveryTime,
+        isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
+// @desc    Create new product (Shopkeeper / Admin)
+// @route   POST /api/products
+// @access  Private/Shopkeeper/Admin
+const createProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      category,
+      description,
+      price,
+      originalPrice,
+      discount,
+      image,
+      unit,
+      stock,
+      storeId,
+      storeName,
+      isTrending,
+      isDealOfTheDay
+    } = req.body;
+
+    if (!name || !category || !price || !image) {
+      return res.status(400).json({ message: 'Please provide name, category, price, and image' });
+    }
+
+    let assignedStore = storeId || req.user.store;
+
+    // If shopkeeper has no store assigned yet, check if a store exists or create a default store for shopkeeper
+    if (!assignedStore) {
+      let existingStore = await Store.findOne({ name: storeName || `${req.user.name}'s Kirana Store` });
+      if (!existingStore) {
+        existingStore = await Store.create({
+          name: storeName || `${req.user.name}'s Kirana Store`,
+          address: 'Grand Trunk Road',
+          city: 'Ara',
+          lat: DEFAULT_LAT,
+          lng: DEFAULT_LNG,
+          phone: req.user.phone
+        });
+      }
+      assignedStore = existingStore._id;
+    }
+
+    const product = await Product.create({
+      name,
+      category,
+      description: description || 'Fresh and premium quality product locally sourced and delivered quickly.',
+      price: Number(price),
+      originalPrice: originalPrice ? Number(originalPrice) : Number(price),
+      discount: discount ? Number(discount) : 0,
+      image,
+      unit: unit || '1 item',
+      stock: stock !== undefined ? Number(stock) : 100,
+      store: assignedStore,
+      storeName: storeName || req.user.name + "'s Store",
+      createdBy: req.user._id,
+      isTrending: Boolean(isTrending),
+      isDealOfTheDay: Boolean(isDealOfTheDay)
+    });
+
+    const populatedProduct = await Product.findById(product._id).populate('store');
+    res.status(201).json(populatedProduct);
+  } catch (error) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
+// @desc    Update product (Shopkeeper / Admin)
+// @route   PUT /api/products/:id
+// @access  Private/Shopkeeper/Admin
+const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check authorization: must be createdBy user, store owner, or admin
+    if (
+      req.user.role !== 'admin' &&
+      product.createdBy &&
+      product.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: 'Not authorized to edit this product' });
+    }
+
+    const fieldsToUpdate = [
+      'name', 'category', 'description', 'price', 'originalPrice',
+      'discount', 'image', 'unit', 'stock', 'isTrending', 'isDealOfTheDay', 'storeName'
+    ];
+
+    fieldsToUpdate.forEach(field => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
+// @desc    Delete product (Shopkeeper / Admin)
+// @route   DELETE /api/products/:id
+// @access  Private/Shopkeeper/Admin
+const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    if (
+      req.user.role !== 'admin' &&
+      product.createdBy &&
+      product.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: 'Not authorized to delete this product' });
+    }
+
+    await Product.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Product deleted successfully', id: req.params.id });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+};
+
+// @desc    Get products added by logged-in shopkeeper
+// @route   GET /api/products/merchant/my-products
+// @access  Private/Shopkeeper/Admin
+const getMerchantProducts = async (req, res) => {
+  try {
+    let query = {};
+    if (req.user.role !== 'admin') {
+      query = {
+        $or: [
+          { createdBy: req.user._id },
+          { store: req.user.store }
+        ]
+      };
+    }
+
+    const products = await Product.find(query).populate('store').sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching merchant products:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
@@ -464,8 +769,13 @@ const getProductRecommendations = async (req, res) => {
 module.exports = {
   getProducts,
   getProductById,
+  searchHyperlocal,
   seedProducts,
   createProductReview,
   deleteProductReview,
-  getProductRecommendations
+  getProductRecommendations,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getMerchantProducts
 };
