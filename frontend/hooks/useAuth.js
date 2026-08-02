@@ -148,6 +148,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithFirebaseToken = async (idToken, extraData = {}) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/firebase-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idToken,
+          name: extraData.name,
+          role: extraData.role || 'customer',
+          email: extraData.email
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Firebase login verification failed');
+      }
+
+      // Store custom application JWT
+      localStorage.setItem('localkart_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+
+      // Role-based redirection path
+      let redirectPath = '/';
+      if (data.user.role === 'shopkeeper') {
+        redirectPath = '/partner/dashboard';
+      } else if (data.user.role === 'delivery_agent') {
+        redirectPath = '/partner/delivery';
+      } else if (data.user.role === 'admin') {
+        redirectPath = '/admin/dashboard';
+      }
+
+      return { success: true, user: data.user, token: data.token, redirectPath };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('localkart_token');
     setToken(null);
@@ -155,7 +197,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, sendOtp, updateFcmToken }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        loginWithFirebaseToken,
+        signup,
+        logout,
+        setUser,
+        sendOtp,
+        updateFcmToken
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

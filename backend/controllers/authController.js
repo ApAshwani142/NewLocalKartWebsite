@@ -348,11 +348,50 @@ const updateFcmToken = async (req, res) => {
   }
 };
 
+// @desc    Authenticate/Register user using Firebase ID Token (Phone OTP)
+// @route   POST /api/auth/firebase-login
+// @access  Public
+const firebaseLogin = async (req, res) => {
+  try {
+    const { idToken, name, role, email } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: 'Firebase ID Token is required' });
+    }
+
+    const { verifyFirebaseIdToken } = require('../services/firebaseService');
+    const { findOrCreateFirebaseUser } = require('../services/userService');
+
+    // 1. Verify Firebase ID Token via Firebase Admin SDK
+    const decodedFirebase = await verifyFirebaseIdToken(idToken);
+
+    // 2. Find or Create User in MongoDB (MongoDB role is strictly enforced)
+    const result = await findOrCreateFirebaseUser({
+      firebaseUid: decodedFirebase.uid,
+      phone: decodedFirebase.phone,
+      email: email || decodedFirebase.email,
+      name: name || decodedFirebase.name,
+      requestedRole: role
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Firebase OTP verification successful',
+      user: result.user,
+      token: result.token
+    });
+  } catch (error) {
+    console.error('Firebase Login Controller Error:', error.message);
+    res.status(401).json({ message: 'Authentication failed: ' + error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
   sendOtp,
-  updateFcmToken
+  updateFcmToken,
+  firebaseLogin
 };
