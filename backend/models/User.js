@@ -31,6 +31,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['customer', 'shopkeeper', 'delivery_agent', 'admin'],
     default: 'customer'
   },
+  firebaseUid: {
+    type: String,
+    sparse: true
+  },
+  supabaseUid: {
+    type: String,
+    sparse: true
+  },
   fcmToken: {
     type: String,
     default: ''

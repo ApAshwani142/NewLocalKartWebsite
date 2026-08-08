@@ -8,7 +8,7 @@ import { Mail, Lock, Eye, EyeOff, User, Phone, Shield, MapPin, Zap, Store, Rocke
 
 export default function SignupPage() {
   const router = useRouter();
-  const { user, signup, sendOtp, loading: authLoading } = useAuth();
+  const { user, signup, signupWithSupabase, sendOtp, loading: authLoading } = useAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [useSupabase, setUseSupabase] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [otp, setOtp] = useState('');
@@ -79,9 +80,38 @@ export default function SignupPage() {
     }
   };
 
+  const handleSupabaseSignup = async (e) => {
+    e.preventDefault();
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const result = await signupWithSupabase(email, password, name, phone, 'customer');
+    if (result.success) {
+      router.push(result.redirectPath || '/');
+    } else {
+      setError(result.error || 'Supabase signup failed. Please try again.');
+      setLoading(false);
+    }
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    if (!otpSent) {
+    if (useSupabase) {
+      handleSupabaseSignup(e);
+    } else if (!otpSent) {
       handleSendOtp(e);
     } else {
       handleVerifyAndSignup(e);
@@ -180,6 +210,25 @@ export default function SignupPage() {
             <p className="text-xs text-gray-400 font-bold mt-1.5 uppercase tracking-wide">
               Sign up for a free LocalKart customer account
             </p>
+          </div>
+
+          {/* Auth Method Selector Tab */}
+          <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => { setUseSupabase(false); setError(null); }}
+              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer ${!useSupabase ? 'bg-white text-emerald-800 shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              Standard Registration
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUseSupabase(true); setError(null); }}
+              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer flex items-center justify-center gap-1.5 ${useSupabase ? 'bg-[#3ecf8e] text-white shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+              Supabase Auth
+            </button>
           </div>
 
           {error && (
@@ -365,7 +414,15 @@ export default function SignupPage() {
             </p>
 
             {/* Submit */}
-            {!otpSent ? (
+            {useSupabase ? (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#3ecf8e] hover:bg-[#34b27b] text-white py-3 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-900/10 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? 'Creating Supabase Account...' : 'Register with Supabase ➔'}
+              </button>
+            ) : !otpSent ? (
               <button
                 type="submit"
                 disabled={loading}

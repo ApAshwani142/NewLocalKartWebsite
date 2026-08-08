@@ -70,6 +70,71 @@ async function findOrCreateFirebaseUser({ firebaseUid, phone, email, name, reque
 }
 
 /**
+ * Find or create user after successful Supabase Auth token verification
+ * Roles: 'customer', 'shopkeeper', 'delivery_agent', 'admin'
+ */
+async function findOrCreateSupabaseUser({ supabaseUid, email, phone, name, requestedRole }) {
+  if (!email && !supabaseUid && !phone) {
+    throw new Error('User identifier (email, phone, or supabaseUid) is required');
+  }
+
+  // Search by supabaseUid OR email OR phone
+  let user = await User.findOne({
+    $or: [
+      { supabaseUid: supabaseUid || 'DO_NOT_MATCH' },
+      { email: email && email !== '' ? email : 'DO_NOT_MATCH' },
+      { phone: phone && phone !== '' ? phone : 'DO_NOT_MATCH' }
+    ]
+  });
+
+  const ALLOWED_ROLES = ['customer', 'shopkeeper', 'delivery_agent', 'admin'];
+
+  if (!user) {
+    // Determine initial role (default to 'customer' if invalid or empty)
+    const role = (requestedRole && ALLOWED_ROLES.includes(requestedRole)) ? requestedRole : 'customer';
+
+    const cleanUid = (supabaseUid || 'sb_' + Date.now()).toLowerCase().replace(/[^a-z0-9]/g, '');
+    user = await User.create({
+      supabaseUid,
+      email: email || `${cleanUid}@elocalkart.com`,
+      phone: phone || `+91${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+      name: name || (role === 'shopkeeper' ? 'Merchant Partner' : role === 'delivery_agent' ? 'Delivery Agent' : 'Local Customer'),
+      password: `sb_auth_${Date.now()}`,
+      role
+    });
+
+    console.log(`[UserService] Created new Supabase user with ID: ${user._id}, Role: ${user.role}`);
+  } else {
+    // Existing user: Link supabaseUid if missing
+    if (supabaseUid && (!user.supabaseUid || user.supabaseUid !== supabaseUid)) {
+      user.supabaseUid = supabaseUid;
+    }
+    if (name && (!user.name || user.name.startsWith('Supabase Verified'))) {
+      user.name = name;
+    }
+    await user.save();
+    console.log(`[UserService] Loaded existing user ID: ${user._id}, Role: ${user.role}`);
+  }
+
+  // Generate Application JWT Token containing User ID and MongoDB Role
+  const jwtToken = generateToken({ id: user._id, role: user.role });
+
+  return {
+    user: {
+      _id: user._id,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      role: user.role,
+      supabaseUid: user.supabaseUid,
+      fcmToken: user.fcmToken,
+      store: user.store
+    },
+    token: jwtToken
+  };
+}
+
+/**
  * Update FCM Token for Push Notifications
  */
 async function updateUserFcmToken(userId, fcmToken) {
@@ -92,5 +157,6 @@ async function updateUserFcmToken(userId, fcmToken) {
 
 module.exports = {
   findOrCreateFirebaseUser,
+  findOrCreateSupabaseUser,
   updateUserFcmToken
 };

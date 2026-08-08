@@ -7,13 +7,15 @@ const {
   updateUserProfile,
   sendOtp,
   updateFcmToken,
-  firebaseLogin
+  firebaseLogin,
+  supabaseLogin
 } = require('../controllers/authController');
 const { authenticateUser } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/firebase-login', firebaseLogin);
+router.post('/supabase-login', supabaseLogin);
 router.post('/send-otp', sendOtp);
 router.get('/me', authenticateUser, getUserProfile);
 router.put('/profile', authenticateUser, updateUserProfile);

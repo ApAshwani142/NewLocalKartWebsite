@@ -8,11 +8,12 @@ import { Mail, Lock, Eye, EyeOff, Shield, MapPin, Zap, Store, Rocket, CreditCard
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, login, loading: authLoading } = useAuth();
+  const { user, login, loginWithSupabase, loading: authLoading } = useAuth();
   
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [useSupabase, setUseSupabase] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -33,9 +34,15 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const result = await login(emailOrPhone, password);
+    let result;
+    if (useSupabase) {
+      result = await loginWithSupabase(emailOrPhone, password);
+    } else {
+      result = await login(emailOrPhone, password);
+    }
+
     if (result.success) {
-      router.push('/');
+      router.push(result.redirectPath || '/');
     } else {
       setError(result.error || 'Login failed. Please check your credentials.');
       setLoading(false);
@@ -139,6 +146,25 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Auth Method Selector Tab */}
+          <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => { setUseSupabase(false); setError(null); }}
+              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer ${!useSupabase ? 'bg-white text-emerald-800 shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              Standard Auth
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUseSupabase(true); setError(null); }}
+              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer flex items-center justify-center gap-1.5 ${useSupabase ? 'bg-[#3ecf8e] text-white shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+              Supabase Auth
+            </button>
+          </div>
+
           {error && (
             <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold p-3.5 rounded-2xl text-left">
               ⚠️ {error}
@@ -150,12 +176,12 @@ export default function LoginPage() {
             {/* Email/Phone */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
-                Email or Phone
+                {useSupabase ? 'Supabase Account Email' : 'Email or Phone'}
               </label>
               <div className="relative">
                 <input
-                  type="text"
-                  placeholder="Enter email or phone"
+                  type={useSupabase ? 'email' : 'text'}
+                  placeholder={useSupabase ? 'user@example.com' : 'Enter email or phone'}
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
                   className="w-full pl-11 pr-4 py-3 bg-white text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
@@ -216,9 +242,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#105634] hover:bg-brand-dark text-white py-3.5 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-[#105634]/15 cursor-pointer disabled:opacity-50"
+              className={`w-full ${useSupabase ? 'bg-[#3ecf8e] hover:bg-[#34b27b]' : 'bg-[#105634] hover:bg-brand-dark'} text-white py-3.5 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-900/10 cursor-pointer disabled:opacity-50`}
             >
-              {loading ? 'Signing in...' : 'Sign in ➔'}
+              {loading ? (useSupabase ? 'Authenticating with Supabase...' : 'Signing in...') : (useSupabase ? 'Sign in with Supabase ➔' : 'Sign in ➔')}
             </button>
           </form>
 

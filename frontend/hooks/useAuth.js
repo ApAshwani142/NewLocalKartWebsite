@@ -190,7 +190,94 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const loginWithSupabaseToken = async (accessToken, extraData = {}) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/supabase-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          accessToken,
+          supabaseUid: extraData.supabaseUid,
+          email: extraData.email,
+          name: extraData.name,
+          phone: extraData.phone,
+          role: extraData.role || 'customer'
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Supabase login verification failed');
+      }
+
+      localStorage.setItem('localkart_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+
+      let redirectPath = '/';
+      if (data.user.role === 'shopkeeper') {
+        redirectPath = '/partner/dashboard';
+      } else if (data.user.role === 'delivery_agent') {
+        redirectPath = '/partner/delivery';
+      } else if (data.user.role === 'admin') {
+        redirectPath = '/admin/dashboard';
+      }
+
+      return { success: true, user: data.user, token: data.token, redirectPath };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const loginWithSupabase = async (email, password) => {
+    try {
+      const { supabaseSignInWithEmail } = await import('@/lib/supabaseClient');
+      const data = await supabaseSignInWithEmail(email, password);
+
+      const accessToken = data.session?.access_token;
+      const sbUser = data.user;
+
+      return await loginWithSupabaseToken(accessToken, {
+        supabaseUid: sbUser?.id,
+        email: sbUser?.email,
+        name: sbUser?.user_metadata?.full_name || sbUser?.user_metadata?.name,
+        role: sbUser?.user_metadata?.role
+      });
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signupWithSupabase = async (email, password, name, phone, role = 'customer') => {
+    try {
+      const { supabaseSignUpWithEmail } = await import('@/lib/supabaseClient');
+      const data = await supabaseSignUpWithEmail(email, password, { full_name: name, phone, role });
+
+      const accessToken = data.session?.access_token;
+      const sbUser = data.user;
+
+      return await loginWithSupabaseToken(accessToken, {
+        supabaseUid: sbUser?.id || `sb_${Date.now()}`,
+        email,
+        name,
+        phone,
+        role
+      });
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { supabaseSignOut } = await import('@/lib/supabaseClient');
+      await supabaseSignOut();
+    } catch (e) {
+      console.warn('Supabase logout warning:', e.message);
+    }
     localStorage.removeItem('localkart_token');
     setToken(null);
     setUser(null);
@@ -204,6 +291,9 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         loginWithFirebaseToken,
+        loginWithSupabase,
+        loginWithSupabaseToken,
+        signupWithSupabase,
         signup,
         logout,
         setUser,

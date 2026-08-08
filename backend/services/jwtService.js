@@ -9,7 +9,12 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
  * @returns {string} Signed JWT Token
  */
 function generateToken(payload) {
-  const tokenPayload = typeof payload === 'object' ? payload : { id: payload };
+  let tokenPayload;
+  if (payload && typeof payload === 'object' && !payload._bsontype && payload.constructor?.name !== 'ObjectId' && payload.constructor?.name !== 'ObjectID') {
+    tokenPayload = payload;
+  } else {
+    tokenPayload = { id: payload };
+  }
   return jwt.sign(tokenPayload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN
   });

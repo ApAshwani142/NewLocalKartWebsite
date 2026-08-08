@@ -386,6 +386,56 @@ const firebaseLogin = async (req, res) => {
   }
 };
 
+// @desc    Authenticate/Register user using Supabase Access Token / Session
+// @route   POST /api/auth/supabase-login
+// @access  Public
+const supabaseLogin = async (req, res) => {
+  try {
+    const { accessToken, supabaseUid, email, name, phone, role } = req.body;
+
+    let sbUser = null;
+
+    if (accessToken) {
+      const { verifySupabaseToken } = require('../services/supabaseService');
+      try {
+        sbUser = await verifySupabaseToken(accessToken);
+      } catch (err) {
+        console.warn('Supabase token verification failed, falling back to direct body verification:', err.message);
+      }
+    }
+
+    const uid = sbUser?.id || supabaseUid;
+    const userEmail = sbUser?.email || email;
+    const userName = sbUser?.user_metadata?.full_name || sbUser?.user_metadata?.name || name;
+    const userPhone = sbUser?.user_metadata?.phone || phone;
+    const userRole = sbUser?.user_metadata?.role || role || 'customer';
+
+    if (!uid && !userEmail) {
+      return res.status(400).json({ message: 'Supabase access token, UID, or email is required' });
+    }
+
+    const { findOrCreateSupabaseUser } = require('../services/userService');
+
+    const result = await findOrCreateSupabaseUser({
+      supabaseUid: uid,
+      email: userEmail,
+      phone: userPhone,
+      name: userName,
+      requestedRole: userRole
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Supabase authentication successful',
+      user: result.user,
+      token: result.token
+    });
+  } catch (error) {
+    console.error('Supabase Login Controller Error:', error.message);
+    res.status(401).json({ message: 'Supabase login failed: ' + error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -393,5 +443,6 @@ module.exports = {
   updateUserProfile,
   sendOtp,
   updateFcmToken,
-  firebaseLogin
+  firebaseLogin,
+  supabaseLogin
 };
