@@ -68,7 +68,7 @@ export default function Footer() {
         </div>
 
         {/* Step 4 Footer Link Columns Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-left">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-left">
           
           {/* Column 1: Company */}
           <div className="flex flex-col gap-3">
@@ -106,19 +106,6 @@ export default function Footer() {
               <li><Link href="/help-center#faq" className="hover:text-white transition">FAQ</Link></li>
               <li><Link href="/contact-us" className="hover:text-white transition">Contact Us</Link></li>
               <li><Link href="/contact-us?category=Report+Issue" className="hover:text-white transition">Report an Issue</Link></li>
-            </ul>
-          </div>
-
-          {/* Column 4: Partners */}
-          <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-black uppercase tracking-widest text-emerald-500">
-              Partners
-            </h4>
-            <ul className="flex flex-col gap-2 text-xs font-bold">
-              <li><Link href="/partner/shopkeeper" className="hover:text-white transition">Become a Shopkeeper</Link></li>
-              <li><Link href="/partner/delivery" className="hover:text-white transition">Become a Delivery Partner</Link></li>
-              <li><Link href="/partner/login" className="hover:text-white transition">Partner Login</Link></li>
-              <li><Link href="/partner/benefits" className="hover:text-white transition">Partner Benefits</Link></li>
             </ul>
           </div>
 

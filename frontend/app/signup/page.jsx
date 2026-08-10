@@ -199,6 +199,7 @@ export default function SignupPage() {
               src="/images/grocery_basket.png"
               alt="e-LocalKart Fresh Grocery Basket"
               fill
+              sizes="(max-width: 768px) 100vw, 45vw"
               className="object-cover object-center group-hover:scale-105 transition duration-700 ease-out"
               priority
             />

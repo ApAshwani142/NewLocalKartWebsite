@@ -174,17 +174,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data.user);
 
-      // Role-based redirection path
-      let redirectPath = '/';
-      if (data.user.role === 'shopkeeper') {
-        redirectPath = '/partner/dashboard';
-      } else if (data.user.role === 'delivery_agent') {
-        redirectPath = '/partner/delivery';
-      } else if (data.user.role === 'admin') {
-        redirectPath = '/admin/dashboard';
-      }
-
-      return { success: true, user: data.user, token: data.token, redirectPath };
+      return { success: true, user: data.user, token: data.token, redirectPath: '/' };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -217,16 +207,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       setUser(data.user);
 
-      let redirectPath = '/';
-      if (data.user.role === 'shopkeeper') {
-        redirectPath = '/partner/dashboard';
-      } else if (data.user.role === 'delivery_agent') {
-        redirectPath = '/partner/delivery';
-      } else if (data.user.role === 'admin') {
-        redirectPath = '/admin/dashboard';
-      }
-
-      return { success: true, user: data.user, token: data.token, redirectPath };
+      return { success: true, user: data.user, token: data.token, redirectPath: '/' };
     } catch (error) {
       return { success: false, error: error.message };
     }

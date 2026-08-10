@@ -743,29 +743,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// @desc    Get products added by logged-in shopkeeper
-// @route   GET /api/products/merchant/my-products
-// @access  Private/Shopkeeper/Admin
-const getMerchantProducts = async (req, res) => {
-  try {
-    let query = {};
-    if (req.user.role !== 'admin') {
-      query = {
-        $or: [
-          { createdBy: req.user._id },
-          { store: req.user.store }
-        ]
-      };
-    }
-
-    const products = await Product.find(query).populate('store').sort({ createdAt: -1 });
-    res.json(products);
-  } catch (error) {
-    console.error('Error fetching merchant products:', error);
-    res.status(500).json({ message: 'Server error: ' + error.message });
-  }
-};
-
 module.exports = {
   getProducts,
   getProductById,
@@ -776,6 +753,5 @@ module.exports = {
   getProductRecommendations,
   createProduct,
   updateProduct,
-  deleteProduct,
-  getMerchantProducts
+  deleteProduct
 };

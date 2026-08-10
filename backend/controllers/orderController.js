@@ -209,31 +209,9 @@ const getMyOrders = async (req, res) => {
   }
 };
 
-// @desc    Get store orders for shopkeeper/admin
-// @route   GET /api/orders/store-orders
-// @access  Private/Shopkeeper/Admin
-const getStoreOrders = async (req, res) => {
-  try {
-    let query = {};
-    if (req.user.role === 'shopkeeper' && req.user.store) {
-      query = { store: req.user.store };
-    }
-
-    const orders = await Order.find(query)
-      .populate('user', 'name email phone')
-      .populate('orderItems.product')
-      .sort({ createdAt: -1 });
-
-    res.json(orders);
-  } catch (error) {
-    console.error('Error fetching store orders:', error);
-    res.status(500).json({ message: 'Server error: ' + error.message });
-  }
-};
-
 // @desc    Update order delivery status
 // @route   PUT /api/orders/:id/status
-// @access  Private/Shopkeeper/DeliveryAgent/Admin
+// @access  Private
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -263,6 +241,5 @@ module.exports = {
   verifyPayment,
   getOrderById,
   getMyOrders,
-  getStoreOrders,
   updateOrderStatus
 };
