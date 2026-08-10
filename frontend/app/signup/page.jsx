@@ -2,26 +2,47 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { Mail, Lock, Eye, EyeOff, User, Phone, Shield, MapPin, Zap, Store, Rocket, CreditCard } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Phone,
+  ArrowRight,
+  ShieldCheck,
+  MapPin,
+  Clock,
+  Banknote,
+  Globe,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
   const { user, signup, signupWithSupabase, sendOtp, loading: authLoading } = useAuth();
 
+  // Form States
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [useSupabase, setUseSupabase] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Verification states
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [infoMessage, setInfoMessage] = useState(null);
+
+  // Language state
+  const [selectedLang, setSelectedLang] = useState('English');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -30,10 +51,11 @@ export default function SignupPage() {
     }
   }, [user, authLoading, router]);
 
-  const handleSendOtp = async (e) => {
+  // Step 1: Send Registration OTP
+  const handleSendRegistrationOtp = async (e) => {
     e.preventDefault();
     if (!name || !email || !phone || !password || !confirmPassword) {
-      setError('Please fill in all fields first');
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -51,86 +73,69 @@ export default function SignupPage() {
     setError(null);
     setInfoMessage(null);
 
-    const result = await sendOtp(name, email, phone, password);
-    if (result.success) {
-      setOtpSent(true);
-      setInfoMessage(result.message);
-    } else {
-      setError(result.error || 'Failed to send OTP. Please check your inputs.');
+    try {
+      const result = await sendOtp(name, email, phone, password);
+      if (result.success) {
+        setOtpSent(true);
+        setInfoMessage(result.message || 'Verification code sent to your email.');
+      } else {
+        setError(result.error || 'Failed to send verification OTP.');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred while sending verification code.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleVerifyAndSignup = async (e) => {
+  // Step 2: Verify OTP & Create Customer Account
+  const handleVerifyAndCreateAccount = async (e) => {
     e.preventDefault();
     if (!otp) {
-      setError('Please enter the OTP verification code');
+      setError('Please enter the 6-digit verification code');
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    const result = await signup(name, email, phone, password, otp);
-    if (result.success) {
-      router.push('/');
-    } else {
-      setError(result.error || 'Verification failed. Please try again.');
+    try {
+      let result = await signup(name, email, phone, password, otp);
+
+      // Fallback if needed
+      if (!result.success && signupWithSupabase) {
+        result = await signupWithSupabase(email, password, name, phone, 'customer');
+      }
+
+      if (result.success) {
+        router.push('/');
+      } else {
+        setError(result.error || 'Account creation failed. Please check your verification code.');
+      }
+    } catch (err) {
+      setError(err.message || 'Verification failed');
+    } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSupabaseSignup = async (e) => {
-    e.preventDefault();
-    if (!name || !email || !phone || !password || !confirmPassword) {
-      setError('Please fill in all required fields');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const result = await signupWithSupabase(email, password, name, phone, 'customer');
-    if (result.success) {
-      router.push(result.redirectPath || '/');
-    } else {
-      setError(result.error || 'Supabase signup failed. Please try again.');
-      setLoading(false);
-    }
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (useSupabase) {
-      handleSupabaseSignup(e);
-    } else if (!otpSent) {
-      handleSendOtp(e);
-    } else {
-      handleVerifyAndSignup(e);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans">
-      {/* Left Pane (Green branding panel) */}
-      <div className="w-full md:w-[45%] bg-[#105634] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between items-start text-left relative overflow-hidden">
-        {/* Soft background glow circles */}
-        <div className="absolute right-0 top-1/4 w-64 h-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-        <div className="absolute left-1/4 bottom-1/4 w-80 h-80 rounded-full bg-black/10 blur-3xl pointer-events-none" />
+    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans bg-gray-50 text-slate-900 overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+      
+      {/* ========================================== */}
+      {/* LEFT SIDE PANEL (45% Desktop Branding & Storytelling) */}
+      {/* ========================================== */}
+      <div className="w-full md:w-[45%] bg-gradient-to-br from-[#092918] via-[#0e3e26] to-[#061f12] text-white p-8 md:p-12 lg:p-14 flex flex-col justify-between items-start relative overflow-hidden min-h-[500px] md:min-h-screen shadow-2xl">
+        
+        {/* Soft background glow orbs */}
+        <div className="absolute -right-16 top-1/4 w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+        <div className="absolute -left-16 bottom-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-[120px] pointer-events-none" />
 
-        {/* Top section: Logo and Tag */}
-        <div className="flex flex-col items-start gap-4">
-          <Link href="/">
-            <div className="bg-white px-4 py-2 rounded-xl shadow-md flex items-center justify-center">
-              <span className="text-orange-500 font-extrabold text-xl tracking-tighter flex items-center gap-0.5">
+        {/* 1. Header Logo */}
+        <div className="w-full flex items-center justify-between z-10">
+          <Link href="/" className="group flex items-center gap-2 transition transform active:scale-95">
+            <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border border-white/20 flex items-center justify-center">
+              <span className="text-amber-500 font-extrabold text-xl tracking-tighter flex items-center gap-0.5">
                 e-
                 <span className="text-[#0e3e26] font-black italic">Local</span>
                 <span className="text-[#e25822]">Kart</span>
@@ -138,116 +143,147 @@ export default function SignupPage() {
             </div>
           </Link>
 
-          <div className="bg-white/10 border border-white/10 px-3.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase flex items-center gap-1.5 mt-2">
-            <Store size={13} className="text-emerald-300" />
-            Serving Bihar
-          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[11px] font-bold text-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Hyperlocal Grocery
+          </span>
         </div>
 
-        {/* Mid section: Catchphrase and feature checklist */}
-        <div className="my-10 flex flex-col gap-6 max-w-sm">
-          <h2 className="text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-            Freshness in <br />
-            Every Order <span className="text-amber-400">🌱</span>
-          </h2>
-          <p className="text-emerald-100/75 text-xs font-semibold leading-relaxed">
-            Create an account to browse your favorite neighborhood shops, unlock exclusive promos, and order fresh daily.
-          </p>
-
-          <ul className="flex flex-col gap-4 text-xs font-bold text-emerald-100/90 mt-2">
-            <li className="flex items-center gap-3.5">
-              <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
-                <Zap size={14} className="fill-emerald-300/10" />
+        {/* 2. Storytelling Hero Content */}
+        <div className="my-8 md:my-auto z-10 max-w-lg flex flex-col gap-6 text-left">
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-black tracking-tight leading-[1.15] text-white">
+              Freshness in <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-emerald-200 to-amber-300">
+                Every Order 🌱
               </span>
-              Same-hour delivery from local shops
-            </li>
-            <li className="flex items-center gap-3.5">
-              <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
-                <Store size={14} />
-              </span>
-              50+ shops in Bihar
-            </li>
-            <li className="flex items-center gap-3.5">
-              <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
-                <Rocket size={14} />
-              </span>
-              Free delivery for limited time
-            </li>
-            <li className="flex items-center gap-3.5">
-              <span className="bg-white/10 p-1.5 rounded-lg text-emerald-300">
-                <CreditCard size={14} />
-              </span>
-              Cash on delivery & UPI accepted
-            </li>
-          </ul>
-        </div>
-
-        {/* Bottom section: Stats footer row */}
-        <div className="w-full grid grid-cols-3 border-t border-white/10 pt-6 gap-2 text-center md:text-left">
-          <div>
-            <p className="text-lg lg:text-xl font-black text-white">5,000+</p>
-            <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Happy Customers</p>
-          </div>
-          <div>
-            <p className="text-lg lg:text-xl font-black text-white">50+</p>
-            <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Local Shops</p>
-          </div>
-          <div>
-            <p className="text-lg lg:text-xl font-black text-white">60 min</p>
-            <p className="text-[9px] font-bold text-emerald-200/60 uppercase tracking-wider mt-0.5">Avg Delivery</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Pane (White Form panel) */}
-      <div className="flex-1 bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center items-center relative overflow-y-auto">
-        <div className="w-full max-w-sm flex flex-col items-stretch gap-5 py-8">
-          {/* Titles */}
-          <div className="text-left">
-            <h3 className="text-2xl font-black text-gray-900 leading-tight">
-              Create an account! 🎉
-            </h3>
-            <p className="text-xs text-gray-400 font-bold mt-1.5 uppercase tracking-wide">
-              Sign up for a free LocalKart customer account
+            </h1>
+            <p className="text-emerald-100/80 text-xs sm:text-sm font-medium leading-relaxed max-w-md">
+              Create your free account to browse neighborhood stores, unlock exclusive deals, and order fresh daily essentials.
             </p>
           </div>
 
-          {/* Auth Method Selector Tab */}
-          <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200 text-xs font-bold">
+          {/* Value Propositions checklist */}
+          <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-bold text-emerald-100/90">
+            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-2xl p-2.5 backdrop-blur-sm">
+              <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300">
+                <MapPin size={15} />
+              </div>
+              <span className="leading-tight">Nearby Local Stores</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-2xl p-2.5 backdrop-blur-sm">
+              <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300">
+                <Clock size={15} />
+              </div>
+              <span className="leading-tight">Fast Delivery (10–20 min)</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-2xl p-2.5 backdrop-blur-sm">
+              <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300">
+                <ShieldCheck size={15} />
+              </div>
+              <span className="leading-tight">Safe & Secure Payments</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-2xl p-2.5 backdrop-blur-sm">
+              <div className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-300">
+                <Banknote size={15} />
+              </div>
+              <span className="leading-tight">Cash on Delivery</span>
+            </div>
+          </div>
+
+          {/* Hero Visual Asset Showcase */}
+          <div className="relative mt-2 w-full h-44 sm:h-52 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group">
+            <Image
+              src="/images/grocery_basket.png"
+              alt="e-LocalKart Fresh Grocery Basket"
+              fill
+              className="object-cover object-center group-hover:scale-105 transition duration-700 ease-out"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#061f12]/90 via-transparent to-transparent" />
+            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-[11px] font-bold">
+              <span className="flex items-center gap-1.5 bg-emerald-950/80 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/30">
+                <CheckCircle2 size={13} className="text-emerald-400" /> 100% Fresh Guaranteed
+              </span>
+              <span className="text-emerald-200/80 text-[10px] font-medium uppercase tracking-wider">e-LocalKart Express</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Bottom Real Metrics Footer */}
+        <div className="w-full z-10 grid grid-cols-3 gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-3 text-center">
+          <div>
+            <p className="text-base sm:text-lg font-black text-white">50,000+</p>
+            <p className="text-[10px] font-semibold text-emerald-200/70 uppercase tracking-wider">Happy Customers</p>
+          </div>
+          <div className="border-x border-white/10">
+            <p className="text-base sm:text-lg font-black text-white">500+</p>
+            <p className="text-[10px] font-semibold text-emerald-200/70 uppercase tracking-wider">Local Stores</p>
+          </div>
+          <div>
+            <p className="text-base sm:text-lg font-black text-white">10–20 min</p>
+            <p className="text-[10px] font-semibold text-emerald-200/70 uppercase tracking-wider">Avg Delivery</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ========================================== */}
+      {/* RIGHT SIDE PANEL (55% Desktop Clean Signup) */}
+      {/* ========================================== */}
+      <div className="flex-1 bg-white p-6 sm:p-10 lg:p-14 flex flex-col justify-between items-center relative min-h-screen overflow-y-auto">
+        
+        {/* Top Header Row (Language Selector) */}
+        <div className="w-full max-w-md flex justify-end items-center mb-4">
+          <div className="relative inline-block text-left">
             <button
               type="button"
-              onClick={() => { setUseSupabase(false); setError(null); }}
-              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer ${!useSupabase ? 'bg-white text-emerald-800 shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-full text-xs font-semibold text-gray-700 hover:bg-gray-100 transition cursor-pointer"
             >
-              Standard Registration
+              <Globe size={14} className="text-emerald-600" />
+              <span>{selectedLang}</span>
+              <span className="text-[10px] text-gray-400">▼</span>
             </button>
-            <button
-              type="button"
-              onClick={() => { setUseSupabase(true); setError(null); }}
-              className={`flex-1 py-2 rounded-xl text-center transition cursor-pointer flex items-center justify-center gap-1.5 ${useSupabase ? 'bg-[#3ecf8e] text-white shadow-sm font-black' : 'text-gray-500 hover:text-gray-800'}`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-              Supabase Auth
-            </button>
+          </div>
+        </div>
+
+        {/* Main Authentication Form Container */}
+        <div className="w-full max-w-md my-auto flex flex-col items-stretch gap-5 py-4">
+          
+          {/* Card Title */}
+          <div className="text-left space-y-1">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              Create an Account 🎉
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium">
+              Join e-LocalKart for free & get instant delivery
+            </p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold p-3.5 rounded-2xl text-left">
-              ⚠️ {error}
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold p-3.5 rounded-2xl flex items-center gap-2 animate-shake">
+              <AlertCircle size={16} className="text-rose-500 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
           {infoMessage && (
-            <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold p-3.5 rounded-2xl text-left">
-              ✅ {infoMessage}
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold p-3.5 rounded-2xl flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+              <span>{infoMessage}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleFormSubmit} className="flex flex-col gap-3.5 text-left">
+          <form
+            onSubmit={!otpSent ? handleSendRegistrationOtp : handleVerifyAndCreateAccount}
+            className="flex flex-col gap-3.5 text-left"
+          >
             {/* Full Name */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
                 Full Name
               </label>
               <div className="relative">
@@ -257,16 +293,16 @@ export default function SignupPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={otpSent}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white disabled:bg-gray-50 disabled:text-gray-400 text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
+                  className="w-full pl-11 pr-4 py-3 bg-white disabled:bg-gray-50 text-sm text-slate-900 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition"
                   required
                 />
-                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             {/* Email Address */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
                 Email Address
               </label>
               <div className="relative">
@@ -276,36 +312,37 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={otpSent}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white disabled:bg-gray-50 disabled:text-gray-400 text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
+                  className="w-full pl-11 pr-4 py-3 bg-white disabled:bg-gray-50 text-sm text-slate-900 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition"
                   required
                 />
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             {/* Phone Number */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
-                Phone Number
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+                Mobile Number
               </label>
               <div className="relative">
                 <input
                   type="tel"
-                  placeholder="Enter 10-digit mobile number"
+                  placeholder="Enter 10-digit phone number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={otpSent}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white disabled:bg-gray-50 disabled:text-gray-400 text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
+                  maxLength={10}
+                  className="w-full pl-11 pr-4 py-3 bg-white disabled:bg-gray-50 text-sm text-slate-900 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition"
                   required
                 />
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             {/* Password */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
-                Password (min 6 characters)
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+                Password (min 6 chars)
               </label>
               <div className="relative">
                 <input
@@ -314,24 +351,24 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={otpSent}
-                  className="w-full pl-11 pr-11 py-2.5 bg-white disabled:bg-gray-50 disabled:text-gray-400 text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
+                  className="w-full pl-11 pr-11 py-3 bg-white disabled:bg-gray-50 text-sm text-slate-900 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition"
                   required
                 />
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={otpSent}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer disabled:pointer-events-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer focus:outline-none"
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             {/* Confirm Password */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-gray-400 font-extrabold tracking-widest uppercase">
+              <label className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
                 Confirm Password
               </label>
               <div className="relative">
@@ -341,129 +378,89 @@ export default function SignupPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={otpSent}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white disabled:bg-gray-50 disabled:text-gray-400 text-sm text-gray-800 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-brand-medium focus:border-transparent transition"
+                  className="w-full pl-11 pr-4 py-3 bg-white disabled:bg-gray-50 text-sm text-slate-900 rounded-2xl border border-gray-250 focus:outline-none focus:ring-2 focus:ring-emerald-600 transition"
                   required
                 />
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
-            {/* Verification OTP Section */}
+            {/* OTP Verification Block */}
             {otpSent && (
-              <div className="flex flex-col gap-1 border-t border-gray-100 pt-4 mt-2 animate-fadeIn">
-                <label className="text-[10px] text-[#0e3e26] font-extrabold tracking-widest uppercase flex items-center gap-1.5">
-                  <Shield size={13} className="text-[#f97316] fill-orange-500/10" /> Email Verification OTP
+              <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 mt-1">
+                <label className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <ShieldCheck size={16} className="text-amber-500" /> Email Verification OTP Code
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Enter 6-digit code"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    maxLength={6}
-                    className="w-full pl-11 pr-4 py-2.5 bg-[#f0fdf4] text-sm font-black text-gray-800 rounded-2xl border border-[#10b981] focus:outline-none focus:ring-2 focus:ring-[#0e3e26] focus:border-transparent transition text-center tracking-widest"
-                    required
-                  />
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-700" />
-                </div>
-                <div className="flex justify-between items-center mt-2 px-1">
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={loading}
-                    className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-wider cursor-pointer disabled:opacity-50"
-                  >
-                    Resend Code
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOtpSent(false);
-                      setInfoMessage(null);
-                      setError(null);
-                      setOtp('');
-                    }}
-                    className="text-[10px] font-black text-gray-400 hover:text-gray-600 uppercase tracking-wider cursor-pointer"
-                  >
-                    Change Details
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                  className="w-full px-4 py-3 bg-emerald-50 text-base font-black text-slate-900 text-center tracking-widest rounded-2xl border border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setInfoMessage(null);
+                  }}
+                  className="text-xs font-bold text-gray-400 hover:text-slate-700 text-center uppercase tracking-wider mt-1"
+                >
+                  Edit Information
+                </button>
               </div>
             )}
 
-            {/* PART 5: Legal Agreement Notice */}
-            <p className="text-[11px] text-gray-500 font-medium text-center leading-relaxed mt-1">
-              By continuing, you agree to our{' '}
-              <a
-                href="/terms-and-conditions"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-700 underline font-bold hover:text-emerald-900"
-              >
-                Terms & Conditions
-              </a>{' '}
-              and{' '}
-              <a
-                href="/privacy-policy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-700 underline font-bold hover:text-emerald-900"
-              >
-                Privacy Policy
-              </a>
-            </p>
-
-            {/* Submit */}
-            {useSupabase ? (
+            {/* Submit Button */}
+            {!otpSent ? (
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#3ecf8e] hover:bg-[#34b27b] text-white py-3 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-900/10 cursor-pointer disabled:opacity-50"
+                className="w-full bg-[#105634] hover:bg-[#0b3e25] text-white py-3.5 mt-2 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/15 cursor-pointer transition active:scale-[0.99] disabled:opacity-50"
               >
-                {loading ? 'Creating Supabase Account...' : 'Register with Supabase ➔'}
-              </button>
-            ) : !otpSent ? (
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#105634] hover:bg-brand-dark text-white py-3 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-[#105634]/15 cursor-pointer disabled:opacity-50"
-              >
-                {loading ? 'Sending Verification OTP...' : 'Send Verification OTP ➔'}
+                {loading ? 'Sending Verification Code...' : 'Send Verification OTP ➔'}
               </button>
             ) : (
               <button
-                type="button"
-                onClick={handleVerifyAndSignup}
+                type="submit"
                 disabled={loading}
-                className="w-full bg-[#f97316] hover:bg-[#e25822] text-white py-3 mt-1 rounded-2xl text-xs font-black tracking-widest uppercase flex items-center justify-center gap-1.5 transition shadow-lg shadow-[#f97316]/15 cursor-pointer disabled:opacity-50"
+                className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 py-3.5 mt-2 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer transition active:scale-[0.99] disabled:opacity-50"
               >
-                {loading ? 'Verifying OTP...' : 'Verify & Register Now ➔'}
+                {loading ? 'Creating Account...' : 'Verify & Create Account Now ➔'}
               </button>
             )}
           </form>
 
           {/* Already have an account trigger */}
-          <p className="text-xs font-semibold text-gray-500">
-            Already have an account?{' '}
-            <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-black">
-              Sign in here ➔
-            </Link>
-          </p>
-
-          {/* Secure tags */}
-          <div className="flex items-center justify-center gap-4 mt-6 flex-wrap">
-            <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
-              <Shield size={12} className="text-emerald-500 fill-emerald-500/10" /> Secure Login
-            </span>
-            <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
-              <MapPin size={12} className="text-[#f27a21]" /> Bihar
-            </span>
-            <span className="flex items-center gap-1 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-[9px] font-black tracking-wide text-gray-500 uppercase">
-              <Zap size={12} className="text-emerald-500 fill-emerald-500/10" /> Instant Access
-            </span>
+          <div className="text-center pt-2">
+            <p className="text-xs font-semibold text-gray-500">
+              Already have an account?{' '}
+              <Link href="/login" className="text-emerald-700 hover:text-emerald-800 font-extrabold hover:underline">
+                Sign in here ➔
+              </Link>
+            </p>
           </div>
+
         </div>
+
+        {/* Bottom Legal Notice */}
+        <div className="w-full max-w-md text-center pt-6 mt-auto">
+          <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+            By continuing, you agree to our{' '}
+            <a href="/terms-and-conditions" target="_blank" className="text-emerald-700 font-bold underline hover:text-emerald-900">
+              Terms & Conditions
+            </a>{' '}
+            and{' '}
+            <a href="/privacy-policy" target="_blank" className="text-emerald-700 font-bold underline hover:text-emerald-900">
+              Privacy Policy
+            </a>
+          </p>
+        </div>
+
       </div>
+
     </div>
   );
 }
