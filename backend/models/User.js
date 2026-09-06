@@ -28,7 +28,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['customer', 'shopkeeper', 'delivery_agent', 'admin'],
+    enum: ['customer', 'shopkeeper', 'delivery_agent', 'admin', 'CUSTOMER', 'SHOPKEEPER', 'DELIVERY_PARTNER', 'ADMIN'],
     default: 'customer'
   },
   firebaseUid: {
@@ -62,7 +62,7 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+}, { collection: 'users' });
 
 // Hash password using bcrypt
 UserSchema.pre('save', async function (next) {

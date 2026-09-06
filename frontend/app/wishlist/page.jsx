@@ -1,18 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import HeaderWrapper from '@/components/HeaderWrapper';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { Heart, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { PRODUCTS } from '@/data/mockData';
 
 export default function WishlistPage() {
-  const [wishlistProducts, setWishlistProducts] = useState(PRODUCTS.slice(0, 3));
+  const [wishlistProducts, setWishlistProducts] = useState([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('localkart_wishlist');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setWishlistProducts(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading wishlist:', e);
+    }
+  }, []);
 
   const handleRemove = (productId) => {
-    setWishlistProducts((prev) => prev.filter((p) => p._id !== productId));
+    setWishlistProducts((prev) => {
+      const updated = prev.filter((p) => (p._id || p.id) !== productId);
+      localStorage.setItem('localkart_wishlist', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
@@ -57,7 +74,7 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {wishlistProducts.map((product) => (
-              <ProductCard key={product._id} product={product} layout="vertical" />
+              <ProductCard key={product._id || product.id} product={product} layout="vertical" />
             ))}
           </div>
         )}

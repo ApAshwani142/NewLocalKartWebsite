@@ -1,0 +1,47 @@
+const mongoose = require('mongoose');
+
+const AddressSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  label: {
+    type: String,
+    default: 'Home'
+  },
+  street: {
+    type: String,
+    required: [true, 'Street address is required']
+  },
+  area: {
+    type: String,
+    default: ''
+  },
+  city: {
+    type: String,
+    default: 'Ara'
+  },
+  pincode: {
+    type: String,
+    default: '802301'
+  },
+  lat: {
+    type: Number,
+    default: 25.556
+  },
+  lng: {
+    type: Number,
+    default: 84.660
+  },
+  isDefault: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true,
+  collection: 'addresses'
+});
+
+module.exports = mongoose.model('Address', AddressSchema);

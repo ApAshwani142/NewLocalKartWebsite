@@ -12,13 +12,12 @@ import Footer from '@/components/Footer';
 import CartModal from '@/components/CartModal';
 import LocationToast from '@/components/LocationToast';
 import { useLocation } from '@/hooks/useLocation';
-import { PRODUCTS } from '@/data/mockData';
 import { Sparkles, ShoppingBag, ArrowRight, Navigation, Flame, Star } from 'lucide-react';
 
 export default function Home() {
   const { location, toast } = useLocation();
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [products, setProducts] = useState(PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -35,12 +34,12 @@ export default function Home() {
         const res = await fetch(`${API_URL}/products?${queryParams.toString()}`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setProducts(data);
           }
         }
       } catch (error) {
-        console.warn('Backend API fallback used:', error.message);
+        console.warn('Backend API fetch error:', error.message);
       } finally {
         setLoading(false);
       }
@@ -102,25 +101,27 @@ export default function Home() {
           <DealOfTheDay />
 
           {/* 5. ⭐ Recommended Products */}
-          <section id="recommended" className="w-full">
-            <div className="flex items-center justify-between mb-6 text-left">
-              <div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wider uppercase flex items-center gap-1.5">
-                  <Star size={18} className="text-amber-500 fill-amber-500/20" />
-                  Recommended For You
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide mt-1">
-                  Handpicked top quality items from your closest neighborhood stores
-                </p>
+          {recommendedProducts.length > 0 && (
+            <section id="recommended" className="w-full">
+              <div className="flex items-center justify-between mb-6 text-left">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wider uppercase flex items-center gap-1.5">
+                    <Star size={18} className="text-amber-500 fill-amber-500/20" />
+                    Recommended For You
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide mt-1">
+                    Handpicked top quality items from your closest neighborhood stores
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-              {recommendedProducts.map((product) => (
-                <ProductCard key={`rec-${product._id}`} product={product} layout="vertical" />
-              ))}
-            </div>
-          </section>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                {recommendedProducts.map((product) => (
+                  <ProductCard key={`rec-${product._id || product.id}`} product={product} layout="vertical" />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* 6. 🔥 Popular Products */}
           <section id="products" className="w-full">
@@ -161,32 +162,34 @@ export default function Home() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {popularProducts.map((product) => (
-                  <ProductCard key={`pop-${product._id}`} product={product} layout="vertical" />
+                  <ProductCard key={`pop-${product._id || product.id}`} product={product} layout="vertical" />
                 ))}
               </div>
             )}
           </section>
 
           {/* 7. 🚀 Trending Products */}
-          <section className="w-full">
-            <div className="flex items-center justify-between mb-6 text-left">
-              <div>
-                <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wider uppercase flex items-center gap-1.5">
-                  <Flame size={18} className="text-red-500 fill-red-500/20" />
-                  Trending Express Essentials
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide mt-1">
-                  Fastest selling daily items delivered ice-cold & fresh in 15 mins
-                </p>
+          {trendingProducts.length > 0 && (
+            <section className="w-full">
+              <div className="flex items-center justify-between mb-6 text-left">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-wider uppercase flex items-center gap-1.5">
+                    <Flame size={18} className="text-red-500 fill-red-500/20" />
+                    Trending Express Essentials
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold tracking-wide mt-1">
+                    Fastest selling daily items delivered ice-cold & fresh in 15 mins
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {trendingProducts.map((product) => (
-                <ProductCard key={`trend-${product._id}`} product={product} layout="vertical" />
-              ))}
-            </div>
-          </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                {trendingProducts.map((product) => (
+                  <ProductCard key={`trend-${product._id || product.id}`} product={product} layout="vertical" />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* 8. 🕒 Recently Viewed */}
           <RecentlyViewed />

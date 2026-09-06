@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CartModal from '@/components/CartModal';
 import ProductCard from '@/components/ProductCard';
-import { PRODUCTS, CATEGORIES } from '@/data/mockData';
+import { CATEGORIES } from '@/data/mockData';
 import { useLocation } from '@/hooks/useLocation';
 import { Search, Sparkles, SlidersHorizontal, ArrowUpDown, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,7 @@ function ProductsCatalogContent() {
   const { location } = useLocation();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-  const [products, setProducts] = useState(PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -39,12 +39,13 @@ function ProductsCatalogContent() {
         const res = await fetch(`${API_URL}/products?${queryParams.toString()}`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setProducts(data);
           }
         }
       } catch (err) {
-        console.warn('Backend API connection failed, using local mock data fallback:', err.message);
+        console.warn('Backend API connection error:', err.message);
+        setError('Failed to load catalog');
       } finally {
         setLoading(false);
       }
@@ -105,9 +106,6 @@ function ProductsCatalogContent() {
           <h1 className="text-2xl md:text-3xl font-black text-gray-950 mt-1 tracking-tight">
             {selectedCategory ? `${selectedCategory} Collection` : 'All Groceries & Essentials'}
           </h1>
-          {/* <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-            Showing {sortedProducts.length} of {products.length} items available
-          </p> */}
         </div>
 
         {/* Filter Controls Bar */}
@@ -166,9 +164,6 @@ function ProductsCatalogContent() {
             <h2 className="text-sm font-black text-gray-900 tracking-wider uppercase">
               Browse by Category
             </h2>
-            {/* <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
-              Swipe to scroll ➜
-            </span> */}
           </div>
 
           <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
@@ -207,7 +202,6 @@ function ProductsCatalogContent() {
 
             {CATEGORIES.map((cat, idx) => {
               const isSelected = selectedCategory === cat.id;
-              const categoryCount = products.filter(p => p.category === cat.id).length;
               return (
                 <motion.button
                   key={cat.id}
@@ -262,7 +256,7 @@ function ProductsCatalogContent() {
             <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-16 text-center text-gray-400 flex flex-col items-center justify-center gap-4">
               <span className="text-3xl">🔍</span>
               <div>
-                <p className="text-sm font-black text-gray-700">No products match your criteria</p>
+                <p className="text-sm font-black text-gray-700">No products found</p>
                 <p className="text-xs text-gray-400 mt-1">Try relaxing search terms or changing categories</p>
               </div>
               <button
@@ -280,7 +274,7 @@ function ProductsCatalogContent() {
               <AnimatePresence mode="popLayout">
                 {sortedProducts.map((product) => (
                   <motion.div
-                    key={product._id}
+                    key={product._id || product.id}
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}

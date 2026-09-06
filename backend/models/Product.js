@@ -26,92 +26,101 @@ const ReviewSchema = new mongoose.Schema({
   }
 });
 
-const ProductSchema = new mongoose.Schema({
-  store: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Store',
-    required: false
+const ProductSchema = new mongoose.Schema(
+  {
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      required: false
+    },
+    shopId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Store',
+      required: false
+    },
+    storeName: {
+      type: String
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false
+    },
+    name: {
+      type: String,
+      required: [true, 'Please add a product name'],
+      trim: true
+    },
+    category: {
+      type: String,
+      required: [true, 'Please add a product category']
+    },
+    description: {
+      type: String,
+      default: 'Fresh and premium quality product locally sourced and delivered in under 40 minutes.'
+    },
+    price: {
+      type: Number,
+      required: [true, 'Please add a product price']
+    },
+    originalPrice: {
+      type: Number
+    },
+    discount: {
+      type: Number,
+      default: 0
+    },
+    image: {
+      type: String
+    },
+    imageUrl: {
+      type: String
+    },
+    rating: {
+      type: Number,
+      default: 4.5
+    },
+    reviews: [ReviewSchema],
+    numReviews: {
+      type: Number,
+      default: 0
+    },
+    unit: {
+      type: String,
+      default: '1 item'
+    },
+    stock: {
+      type: Number,
+      default: 100
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true
+    },
+    isTrending: {
+      type: Boolean,
+      default: false
+    },
+    isDealOfTheDay: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   },
-  storeName: {
-    type: String
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false
-  },
-  name: {
-    type: String,
-    required: [true, 'Please add a product name'],
-    trim: true
-  },
-  category: {
-    type: String,
-    required: [true, 'Please add a product category'],
-    enum: [
-      'Vegetables',
-      'Fruits',
-      'Dairy & Eggs',
-      'Meat & Fish',
-      'Fresh Bread',
-      'Snacks',
-      'Beverages',
-      'Personal Care',
-      'Home Care',
-      'Organics',
-      'Cloth',
-      'Electronic'
-    ]
-  },
-  description: {
-    type: String,
-    required: [true, 'Please add a product description'],
-    default: 'Fresh and premium quality product locally sourced and delivered in under 40 minutes.'
-  },
-  price: {
-    type: Number,
-    required: [true, 'Please add a product price']
-  },
-  originalPrice: {
-    type: Number
-  },
-  discount: {
-    type: Number,
-    default: 0
-  },
-  image: {
-    type: String,
-    required: [true, 'Please add a product image URL']
-  },
-  rating: {
-    type: Number,
-    default: 4.5
-  },
-  reviews: [ReviewSchema],
-  numReviews: {
-    type: Number,
-    default: 0
-  },
-  unit: {
-    type: String,
-    default: '1 item'
-  },
-  stock: {
-    type: Number,
-    default: 100
-  },
-  isTrending: {
-    type: Boolean,
-    default: false
-  },
-  isDealOfTheDay: {
-    type: Boolean,
-    default: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
+);
+
+// Virtual getter for backward compatibility with frontend expecting product.image
+ProductSchema.virtual('resolvedImage').get(function () {
+  return this.imageUrl || this.image || '';
 });
 
-module.exports = mongoose.model('Product', ProductSchema);
+// Map Product model strictly to 'products' collection
+module.exports = mongoose.model('Product', ProductSchema, 'products');
+

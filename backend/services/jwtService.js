@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretlocalkartkey12345!';
+const JWT_SECRET = process.env.JWT_SECRET || 'localkart_super_secret_jwt_key_change_in_production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 
 /**
@@ -11,9 +11,18 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 function generateToken(payload) {
   let tokenPayload;
   if (payload && typeof payload === 'object' && !payload._bsontype && payload.constructor?.name !== 'ObjectId' && payload.constructor?.name !== 'ObjectID') {
-    tokenPayload = payload;
+    const userId = payload.userId || (payload.id ? payload.id.toString() : payload._id ? payload._id.toString() : '');
+    tokenPayload = {
+      userId,
+      id: userId,
+      email: payload.email || '',
+      role: payload.role || '',
+      name: payload.name || '',
+      ...payload
+    };
   } else {
-    tokenPayload = { id: payload };
+    const id = payload ? payload.toString() : '';
+    tokenPayload = { userId: id, id };
   }
   return jwt.sign(tokenPayload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN

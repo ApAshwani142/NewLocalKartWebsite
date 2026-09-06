@@ -12,8 +12,43 @@ connectDB();
 
 const app = express();
 
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'http://127.0.0.1:5173'
+    ];
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const isAllowedConfigured = allowedOrigins.includes(origin);
+    const isDevLocalhost = !isProduction && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'));
+
+    if (isAllowedConfigured || isDevLocalhost) {
+      return callback(null, true);
+    }
+
+    if (isProduction) {
+      return callback(new Error('CORS blocked: Origin not allowed in production'), false);
+    }
+
+    return callback(null, true);
+  },
+  credentials: true
+};
+
 // Enable CORS
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Body parser
 app.use(express.json());

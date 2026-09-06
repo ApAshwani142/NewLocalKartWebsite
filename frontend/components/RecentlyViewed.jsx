@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
-import { Clock, Eye } from 'lucide-react';
-import { PRODUCTS } from '@/data/mockData';
+import { Clock } from 'lucide-react';
 
 export default function RecentlyViewed() {
   const [recentProducts, setRecentProducts] = useState([]);
@@ -15,14 +14,11 @@ export default function RecentlyViewed() {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setRecentProducts(parsed.slice(0, 4));
-          return;
         }
       }
     } catch (e) {
-      // Fallback
+      console.warn('Error reading recently viewed:', e);
     }
-    // Default fallback to show initial recent items
-    setRecentProducts(PRODUCTS.slice(4, 8));
   }, []);
 
   if (!recentProducts || recentProducts.length === 0) {

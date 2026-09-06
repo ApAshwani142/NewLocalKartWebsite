@@ -9,8 +9,7 @@ import CartModal from '@/components/CartModal';
 import ProductCard from '@/components/ProductCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
-import { PRODUCTS } from '@/data/mockData';
-import { Star, MapPin, Trash2, ArrowLeft, Check, AlertCircle, ShoppingBag, Plus, Minus } from 'lucide-react';
+import { Star, MapPin, Trash2, ArrowLeft, Check, AlertCircle, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProductDetailPage({ params }) {
@@ -29,7 +28,7 @@ export default function ProductDetailPage({ params }) {
 
   // Delivery Checker State
   const [pincode, setPincode] = useState('');
-  const [deliveryStatus, setDeliveryStatus] = useState(null); // 'available' | 'delayed' | 'unavailable'
+  const [deliveryStatus, setDeliveryStatus] = useState(null);
 
   // Review Form State
   const [reviewRating, setReviewRating] = useState(5);
@@ -50,57 +49,23 @@ export default function ProductDetailPage({ params }) {
         setLoading(true);
         setError(null);
 
-        let data = null;
-        let fetchedSuccessfully = false;
-
-        // Try to fetch product details from database
-        try {
-          const res = await fetch(`${API_URL}/products/${productId}`);
-          if (res.ok) {
-            data = await res.json();
-            fetchedSuccessfully = true;
-          }
-        } catch (fetchErr) {
-          console.warn('Failed to fetch from backend API, checking fallback:', fetchErr.message);
+        const res = await fetch(`${API_URL}/products/${productId}`);
+        if (!res.ok) {
+          throw new Error('Product not found');
         }
 
-        // If not fetched from DB, try local mock data fallback
-        if (!fetchedSuccessfully) {
-          const mockProd = PRODUCTS.find((p) => p._id === productId);
-          if (mockProd) {
-            data = mockProd;
-          } else {
-            throw new Error('Product not found');
-          }
-        }
-
+        const data = await res.json();
         setProduct(data);
 
         // Fetch recommendations from API if database product was loaded
-        let recsFetched = false;
-        if (fetchedSuccessfully) {
-          try {
-            const recRes = await fetch(`${API_URL}/products/${productId}/recommendations`);
-            if (recRes.ok) {
-              const recData = await recRes.json();
-              setRecommendations(recData);
-              recsFetched = true;
-            }
-          } catch (recErr) {
-            console.warn('Failed to fetch recommendations:', recErr.message);
+        try {
+          const recRes = await fetch(`${API_URL}/products/${productId}/recommendations`);
+          if (recRes.ok) {
+            const recData = await recRes.json();
+            setRecommendations(Array.isArray(recData) ? recData : []);
           }
-        }
-
-        // Fallback recommendations if DB call failed or using mock product
-        if (!recsFetched && data) {
-          const category = data.category;
-          const recs = PRODUCTS.filter((p) => p._id !== data._id && p.category === category).slice(0, 4);
-          if (recs.length < 4) {
-            const extra = PRODUCTS.filter((p) => p._id !== data._id && p.category !== category).slice(0, 4 - recs.length);
-            setRecommendations([...recs, ...extra]);
-          } else {
-            setRecommendations(recs);
-          }
+        } catch (recErr) {
+          console.warn('Failed to fetch recommendations:', recErr.message);
         }
       } catch (err) {
         console.warn('Error fetching product data:', err.message);
@@ -122,11 +87,11 @@ export default function ProductDetailPage({ params }) {
 
     const code = pincode.trim();
     if (code === '801101') {
-      setDeliveryStatus('available'); // Hyperlocal 40 min delivery
+      setDeliveryStatus('available');
     } else if (code.startsWith('801')) {
-      setDeliveryStatus('delayed'); // General Bihar 2h delivery
+      setDeliveryStatus('delayed');
     } else {
-      setDeliveryStatus('unavailable'); // Outside delivery zone
+      setDeliveryStatus('unavailable');
     }
   };
 
@@ -165,7 +130,6 @@ export default function ProductDetailPage({ params }) {
       setReviewComment('');
       setReviewRating(5);
       
-      // Update local product reviews state
       setProduct(data.product);
     } catch (err) {
       setReviewError(err.message);
@@ -192,7 +156,6 @@ export default function ProductDetailPage({ params }) {
         throw new Error(data.message || 'Failed to delete review');
       }
 
-      // Update local product reviews state
       setProduct(data.product);
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -274,7 +237,7 @@ export default function ProductDetailPage({ params }) {
                   {product.rating ? product.rating.toFixed(1) : '4.5'}
                 </span>
                 <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
-                  {product.numReviews} Verified Reviews
+                  {product.numReviews || (product.reviews ? product.reviews.length : 0)} Verified Reviews
                 </span>
               </div>
             </div>
@@ -304,7 +267,7 @@ export default function ProductDetailPage({ params }) {
                   >
                     <motion.button
                       whileTap={{ scale: 0.8 }}
-                      onClick={() => updateQuantity(product._id, qty - 1)}
+                      onClick={() => updateQuantity(product._id || product.id, qty - 1)}
                       className="px-3.5 py-2 hover:bg-green-800 transition text-xs font-bold cursor-pointer"
                     >
                       <Minus size={13} className="stroke-[3]" />
@@ -312,7 +275,7 @@ export default function ProductDetailPage({ params }) {
                     <span className="px-1 text-xs font-black min-w-[20px] text-center">{qty}</span>
                     <motion.button
                       whileTap={{ scale: 0.8 }}
-                      onClick={() => updateQuantity(product._id, qty + 1)}
+                      onClick={() => updateQuantity(product._id || product.id, qty + 1)}
                       className="px-3.5 py-2 hover:bg-green-800 transition text-xs font-bold cursor-pointer"
                     >
                       <Plus size={13} className="stroke-[3]" />
@@ -397,9 +360,9 @@ export default function ProductDetailPage({ params }) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Reviews list (2 columns) */}
+            {/* Reviews list */}
             <div className="lg:col-span-2 flex flex-col gap-4">
-              {product.reviews.length === 0 ? (
+              {(!product.reviews || product.reviews.length === 0) ? (
                 <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-250 p-8 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
                   <span className="text-2xl">💬</span>
                   <p className="text-xs font-bold">No reviews submitted yet.</p>
@@ -412,8 +375,7 @@ export default function ProductDetailPage({ params }) {
                       key={rev._id}
                       className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-left flex flex-col gap-2 relative group"
                     >
-                      {/* Delete review button (visible to author) */}
-                      {user && user._id === rev.user.toString() && (
+                      {user && user._id === rev.user?.toString() && (
                         <button
                           onClick={() => handleDeleteReview(rev._id)}
                           title="Delete Review"
@@ -426,12 +388,12 @@ export default function ProductDetailPage({ params }) {
                       <div className="flex items-center gap-2 justify-between">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-emerald-500 text-white font-black text-xs flex items-center justify-center uppercase">
-                            {rev.name.charAt(0)}
+                            {rev.name?.charAt(0) || 'U'}
                           </div>
                           <div>
                             <p className="text-xs font-black text-gray-800">{rev.name}</p>
                             <p className="text-[9px] text-gray-400 font-bold">
-                              {new Date(rev.createdAt).toLocaleDateString('en-IN', {
+                              {new Date(rev.createdAt || Date.now()).toLocaleDateString('en-IN', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric'
@@ -440,7 +402,6 @@ export default function ProductDetailPage({ params }) {
                           </div>
                         </div>
 
-                        {/* Star Rating display */}
                         <div className="flex items-center gap-0.5 text-xs font-black text-amber-500 pr-6">
                           {[...Array(5)].map((_, i) => (
                             <Star
@@ -465,7 +426,7 @@ export default function ProductDetailPage({ params }) {
               )}
             </div>
 
-            {/* Write a Review Block (1 column) */}
+            {/* Write a Review Block */}
             <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-left flex flex-col gap-4">
               <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">
                 Write a Review
@@ -496,7 +457,6 @@ export default function ProductDetailPage({ params }) {
                     </p>
                   )}
 
-                  {/* Rating selection stars */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] text-gray-400 font-extrabold tracking-wider uppercase">
                       Overall Rating
@@ -522,7 +482,6 @@ export default function ProductDetailPage({ params }) {
                     </div>
                   </div>
 
-                  {/* Comment input */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] text-gray-400 font-extrabold tracking-wider uppercase">
                       Share your experience
@@ -555,23 +514,25 @@ export default function ProductDetailPage({ params }) {
         </section>
 
         {/* Recommendations Grid */}
-        <section className="w-full">
-          <div className="text-left mb-6">
-            <h2 className="text-lg font-black text-gray-900 tracking-wider uppercase flex items-center gap-1.5">
-              <span className="text-base">✨</span>
-              You May Also Like
-            </h2>
-            <p className="text-xs text-gray-400 font-bold tracking-wide mt-1">
-              Recommended based on categories and popular local selections
-            </p>
-          </div>
+        {recommendations.length > 0 && (
+          <section className="w-full">
+            <div className="text-left mb-6">
+              <h2 className="text-lg font-black text-gray-900 tracking-wider uppercase flex items-center gap-1.5">
+                <span className="text-base">✨</span>
+                You May Also Like
+              </h2>
+              <p className="text-xs text-gray-400 font-bold tracking-wide mt-1">
+                Recommended based on categories and popular local selections
+              </p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-            {recommendations.map((recProduct) => (
-              <ProductCard key={recProduct._id} product={recProduct} layout="vertical" />
-            ))}
-          </div>
-        </section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+              {recommendations.map((recProduct) => (
+                <ProductCard key={recProduct._id || recProduct.id} product={recProduct} layout="vertical" />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

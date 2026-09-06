@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Store = require('../models/Store');
 const Order = require('../models/Order');
@@ -37,27 +38,31 @@ const getProducts = async (req, res) => {
       query.name = { $regex: search, $options: 'i' };
     }
 
-    // Populate store reference
-    const products = await Product.find(query).populate('store').lean();
+    // Populate store reference (supports both 'store' and 'shopId' fields)
+    const products = await Product.find(query).populate('store').populate('shopId').lean();
 
     // Enrich products with dynamic Haversine distance and delivery time
     const enrichedProducts = products.map((prod) => {
-      const storeObj = prod.store || {};
+      const storeObj = prod.store || prod.shopId || {};
       const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
       const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
 
       const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
       const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
 
+      const resolvedImg = prod.imageUrl || prod.image || '';
+
       return {
         ...prod,
-        storeId: storeObj._id,
+        image: resolvedImg,
+        imageUrl: resolvedImg,
+        storeId: storeObj._id || prod.shopId,
         storeName: storeObj.name || prod.storeName || 'Local Partner Store',
-        storeLogo: storeObj.logo,
-        storeIsOpen: storeObj.isOpen ?? true,
+        storeLogo: storeObj.logo || storeObj.imageUrl,
+        storeIsOpen: storeObj.isOpen ?? storeObj.isActive ?? true,
         distanceKm,
         deliveryTime,
-        isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+        isDeliverable: isDeliverable && (storeObj.isOpen ?? storeObj.isActive ?? true)
       };
     });
 
@@ -84,31 +89,38 @@ const getProducts = async (req, res) => {
 // @access  Public
 const getProductById = async (req, res) => {
   try {
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid product ID format' });
+    }
     const userLat = parseFloat(req.query.lat) || DEFAULT_LAT;
     const userLng = parseFloat(req.query.lng) || DEFAULT_LNG;
 
-    const product = await Product.findById(req.params.id).populate('store').lean();
+    const product = await Product.findById(req.params.id).populate('store').populate('shopId').lean();
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    const storeObj = product.store || {};
+    const storeObj = product.store || product.shopId || {};
     const storeLat = storeObj.lat !== undefined ? storeObj.lat : DEFAULT_LAT;
     const storeLng = storeObj.lng !== undefined ? storeObj.lng : DEFAULT_LNG;
 
     const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
     const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
 
+    const resolvedImg = product.imageUrl || product.image || '';
+
     const enrichedProduct = {
       ...product,
-      storeId: storeObj._id,
+      image: resolvedImg,
+      imageUrl: resolvedImg,
+      storeId: storeObj._id || product.shopId,
       storeName: storeObj.name || product.storeName || 'Local Partner Store',
-      storeLogo: storeObj.logo,
-      storeIsOpen: storeObj.isOpen ?? true,
+      storeLogo: storeObj.logo || storeObj.imageUrl,
+      storeIsOpen: storeObj.isOpen ?? storeObj.isActive ?? true,
       distanceKm,
       deliveryTime,
-      isDeliverable: isDeliverable && (storeObj.isOpen ?? true)
+      isDeliverable: isDeliverable && (storeObj.isOpen ?? storeObj.isActive ?? true)
     };
 
     res.json(enrichedProduct);

@@ -13,7 +13,7 @@ const authenticateUser = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretlocalkartkey12345!');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'localkart_super_secret_jwt_key_change_in_production');
 
       req.user = await User.findById(decoded.id).select('-password');
 
