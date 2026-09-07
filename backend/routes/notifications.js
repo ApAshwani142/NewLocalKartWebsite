@@ -1,14 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   getNotifications,
   markAsRead
-} = require('../controllers/notificationController');
-const { authenticateUser } = require('../middleware/authMiddleware');
+} from '../controllers/notificationController.js';
+import { authenticateUser } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
 
 router.use(authenticateUser);
 
 router.get('/', getNotifications);
 router.put('/:id/read', markAsRead);
 
-module.exports = router;
+export default router;

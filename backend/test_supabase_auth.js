@@ -1,16 +1,16 @@
 
-const mongoose = require('mongoose');
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+import mongoose from 'mongoose';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { findOrCreateSupabaseUser } = require('./services/userService');
-const { verifySupabaseToken } = require('./services/supabaseService');
-const { generateToken, verifyToken } = require('./services/jwtService');
-const User = require('./models/User');
-const authRoutes = require('./routes/auth');
+import { findOrCreateSupabaseUser } from './services/userService.js';
+import { verifySupabaseToken } from './services/supabaseService.js';
+import { generateToken, verifyToken } from './services/jwtService.js';
+import User from './models/User.js';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 app.use(cors());

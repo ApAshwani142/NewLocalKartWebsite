@@ -1,4 +1,5 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo-project.supabase.co';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbW8iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYwMDAwMDAwMCwiZXhwIjoyMDAwMDAwMDAwfQ.demo-signature';
@@ -32,7 +33,6 @@ async function verifySupabaseToken(accessToken) {
 
     if (error || !user) {
       // In development mode, if token verification fails due to unconfigured project, attempt fallback token payload extraction
-      const jwt = require('jsonwebtoken');
       const decoded = jwt.decode(accessToken);
       if (decoded && (decoded.sub || decoded.email)) {
         return {
@@ -51,7 +51,7 @@ async function verifySupabaseToken(accessToken) {
   }
 }
 
-module.exports = {
+export {
   getSupabaseClient,
   verifySupabaseToken
 };

@@ -1,5 +1,5 @@
-const User = require('../models/User');
-const { generateToken } = require('./jwtService');
+import User from '../models/User.js';
+import { generateToken } from './jwtService.js';
 
 /**
  * Find or create user after successful Firebase ID Token verification
@@ -155,7 +155,7 @@ async function updateUserFcmToken(userId, fcmToken) {
   return user;
 }
 
-module.exports = {
+export {
   findOrCreateFirebaseUser,
   findOrCreateSupabaseUser,
   updateUserFcmToken

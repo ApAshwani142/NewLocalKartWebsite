@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
-const Product = require('../models/Product');
-const Store = require('../models/Store');
-const Order = require('../models/Order');
-const { calculateDistance, estimateDeliveryTime } = require('../utils/locationUtils');
+import mongoose from 'mongoose';
+import Product from '../models/Product.js';
+import Store from '../models/Store.js';
+import Order from '../models/Order.js';
+import { calculateDistance, estimateDeliveryTime } from '../utils/locationUtils.js';
 
 const DEFAULT_LAT = 25.556;
 const DEFAULT_LNG = 84.660;
@@ -672,9 +672,11 @@ const createProduct = async (req, res) => {
       originalPrice: originalPrice ? Number(originalPrice) : Number(price),
       discount: discount ? Number(discount) : 0,
       image,
+      imageUrl: image,
       unit: unit || '1 item',
       stock: stock !== undefined ? Number(stock) : 100,
       store: assignedStore,
+      shopId: assignedStore,
       storeName: storeName || req.user.name + "'s Store",
       createdBy: req.user._id,
       isTrending: Boolean(isTrending),
@@ -711,7 +713,7 @@ const updateProduct = async (req, res) => {
 
     const fieldsToUpdate = [
       'name', 'category', 'description', 'price', 'originalPrice',
-      'discount', 'image', 'unit', 'stock', 'isTrending', 'isDealOfTheDay', 'storeName'
+      'discount', 'image', 'imageUrl', 'unit', 'stock', 'isTrending', 'isDealOfTheDay', 'storeName'
     ];
 
     fieldsToUpdate.forEach(field => {
@@ -719,6 +721,20 @@ const updateProduct = async (req, res) => {
         product[field] = req.body[field];
       }
     });
+
+    // Ensure image and imageUrl stay synced
+    if (req.body.image !== undefined) {
+      product.imageUrl = req.body.image;
+    } else if (req.body.imageUrl !== undefined) {
+      product.image = req.body.imageUrl;
+    }
+
+    // Ensure store and shopId stay synced
+    if (req.body.storeId !== undefined || req.body.store !== undefined || req.body.shopId !== undefined) {
+      const sId = req.body.shopId || req.body.storeId || req.body.store;
+      product.store = sId;
+      product.shopId = sId;
+    }
 
     const updatedProduct = await product.save();
     res.json(updatedProduct);
@@ -755,7 +771,7 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getProducts,
   getProductById,
   searchHyperlocal,

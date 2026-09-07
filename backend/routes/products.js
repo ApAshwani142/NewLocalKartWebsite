@@ -1,6 +1,5 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   getProducts,
   getProductById,
   searchHyperlocal,
@@ -11,8 +10,10 @@ const {
   createProduct,
   updateProduct,
   deleteProduct
-} = require('../controllers/productController');
-const { authenticateUser } = require('../middleware/authMiddleware');
+} from '../controllers/productController.js';
+import { authenticateUser } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
 
 // Public endpoints
 router.get('/', getProducts);
@@ -30,4 +31,4 @@ router.post('/:id/reviews', authenticateUser, createProductReview);
 router.delete('/:id/reviews/:reviewId', authenticateUser, deleteProductReview);
 router.get('/:id/recommendations', getProductRecommendations);
 
-module.exports = router;
+export default router;

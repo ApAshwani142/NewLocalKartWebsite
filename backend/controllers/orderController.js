@@ -1,9 +1,10 @@
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
-const Order = require('../models/Order');
-const OrderItem = require('../models/OrderItem');
-const Product = require('../models/Product');
-const Store = require('../models/Store');
+import mongoose from 'mongoose';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import Order from '../models/Order.js';
+import OrderItem from '../models/OrderItem.js';
+import Product from '../models/Product.js';
+import Store from '../models/Store.js';
 
 // Initialize Razorpay SDK if environment variables exist
 let razorpay;
@@ -146,7 +147,6 @@ const addOrderItems = async (req, res) => {
 
       // 5. Audit log in inventory_logs
       try {
-        const mongoose = require('mongoose');
         await mongoose.connection.db.collection('inventory_logs').insertOne({
           productId: item.productDoc._id,
           changeAmount: -item.qty,
@@ -394,7 +394,6 @@ const updateOrderStatus = async (req, res) => {
         );
         if (prod) {
           try {
-            const mongoose = require('mongoose');
             await mongoose.connection.db.collection('inventory_logs').insertOne({
               productId: item.productId,
               changeAmount: item.quantity,
@@ -420,7 +419,7 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   addOrderItems,
   verifyPayment,
   getOrderById,

@@ -1,9 +1,5 @@
-let admin;
-try {
-  admin = require('firebase-admin');
-} catch (e) {
-  admin = null;
-}
+import admin from 'firebase-admin';
+import fs from 'fs';
 
 let firebaseApp = null;
 let isInitialized = false;
@@ -32,8 +28,9 @@ function initFirebaseAdmin() {
       isInitialized = true;
       console.log('[FirebaseAdmin Config] Initialized using FIREBASE_SERVICE_ACCOUNT_KEY env var.');
     } else if (credentialsPath) {
+      const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
       firebaseApp = admin.initializeApp({
-        credential: admin.credential.cert(require(credentialsPath))
+        credential: admin.credential.cert(credentials)
       });
       isInitialized = true;
       console.log(`[FirebaseAdmin Config] Initialized using credentials file at ${credentialsPath}`);
@@ -53,8 +50,9 @@ function initFirebaseAdmin() {
   return firebaseApp;
 }
 
-module.exports = {
+export {
   admin,
   initFirebaseAdmin,
-  isInitialized: () => isInitialized
+  isInitialized
 };
+

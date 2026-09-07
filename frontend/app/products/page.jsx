@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 function ProductsCatalogContent() {
   const searchParams = useSearchParams();
   const { location } = useLocation();
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);

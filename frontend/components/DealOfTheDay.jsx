@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Tag, Clock } from 'lucide-react';
 
 export default function DealOfTheDay({ activePromotion = null }) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
   
   // Default active promotion state for initial showcase (controlled by admin/API)
   const [promo, setPromo] = useState(activePromotion || {

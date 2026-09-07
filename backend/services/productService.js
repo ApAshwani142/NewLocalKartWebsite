@@ -1,6 +1,6 @@
-const Product = require('../models/Product');
-const Store = require('../models/Store');
-const { calculateDistance, estimateDeliveryTime } = require('../utils/locationUtils');
+import Product from '../models/Product.js';
+import Store from '../models/Store.js';
+import { calculateDistance, estimateDeliveryTime } from '../utils/locationUtils.js';
 
 const DEFAULT_LAT = 25.556;
 const DEFAULT_LNG = 84.660;
@@ -74,7 +74,7 @@ async function createProductForShopkeeper(productData, user) {
   return Product.findById(product._id).populate('store');
 }
 
-module.exports = {
+export {
   getAllProducts,
   createProductForShopkeeper
 };

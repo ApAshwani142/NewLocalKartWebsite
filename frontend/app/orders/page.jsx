@@ -18,7 +18,7 @@ export default function OrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   useEffect(() => {
     if (!authLoading && !user) {

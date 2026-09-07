@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const Address = require('../models/Address');
+import mongoose from 'mongoose';
+import Address from '../models/Address.js';
 
 // @desc    Get user addresses
 // @route   GET /api/addresses
@@ -34,22 +34,21 @@ const addAddress = async (req, res) => {
       await Address.updateMany({ userId }, { isDefault: false });
     }
 
-    await Address.create({
+    const newAddress = await Address.create({
       userId,
       label: label || 'Home',
       street,
       area: area || '',
       city: city || 'Ara',
       pincode: pincode || '802301',
-      lat: lat !== undefined ? Number(lat) : 25.556,
-      lng: lng !== undefined ? Number(lng) : 84.660,
+      lat: lat ? Number(lat) : 25.556,
+      lng: lng ? Number(lng) : 84.660,
       isDefault: shouldBeDefault
     });
 
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
-    res.status(201).json(addresses);
+    res.status(201).json(newAddress);
   } catch (error) {
-    console.error('Error adding address:', error);
+    console.error('Error creating address:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
@@ -63,14 +62,9 @@ const updateAddress = async (req, res) => {
     const { addressId } = req.params;
     const { label, street, area, city, pincode, lat, lng, isDefault } = req.body;
 
-    if (!addressId || !mongoose.Types.ObjectId.isValid(addressId)) {
-      return res.status(400).json({ message: 'Invalid address ID format' });
-    }
-
-    // Strict user isolation check
     const address = await Address.findOne({ _id: addressId, userId });
     if (!address) {
-      return res.status(404).json({ message: 'Address not found or unauthorized' });
+      return res.status(404).json({ message: 'Address not found' });
     }
 
     if (isDefault) {
@@ -87,9 +81,7 @@ const updateAddress = async (req, res) => {
     if (lng !== undefined) address.lng = Number(lng);
 
     await address.save();
-
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
-    res.json(addresses);
+    res.json(address);
   } catch (error) {
     console.error('Error updating address:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
@@ -104,36 +96,31 @@ const deleteAddress = async (req, res) => {
     const userId = req.user._id || req.user.id || req.user.userId;
     const { addressId } = req.params;
 
-    if (!addressId || !mongoose.Types.ObjectId.isValid(addressId)) {
-      return res.status(400).json({ message: 'Invalid address ID format' });
-    }
-
-    // Strict user isolation check
     const address = await Address.findOne({ _id: addressId, userId });
     if (!address) {
-      return res.status(404).json({ message: 'Address not found or unauthorized' });
+      return res.status(404).json({ message: 'Address not found' });
     }
 
-    await Address.deleteOne({ _id: addressId, userId });
+    const wasDefault = address.isDefault;
+    await Address.deleteOne({ _id: addressId });
 
-    // If deleted address was default, make remaining first address default
-    if (address.isDefault) {
-      const remainingFirst = await Address.findOne({ userId }).sort({ createdAt: -1 });
-      if (remainingFirst) {
-        remainingFirst.isDefault = true;
-        await remainingFirst.save();
+    // If deleted address was default, make the newest remaining address default
+    if (wasDefault) {
+      const remaining = await Address.findOne({ userId }).sort({ createdAt: -1 });
+      if (remaining) {
+        remaining.isDefault = true;
+        await remaining.save();
       }
     }
 
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });
-    res.json(addresses);
+    res.json({ success: true, message: 'Address deleted successfully' });
   } catch (error) {
     console.error('Error deleting address:', error);
     res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
-module.exports = {
+export {
   getAddresses,
   addAddress,
   updateAddress,

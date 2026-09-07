@@ -1,4 +1,4 @@
-const { admin, initFirebaseAdmin, isInitialized } = require('../config/firebaseAdmin');
+import { admin, initFirebaseAdmin, isInitialized } from '../config/firebaseAdmin.js';
 
 // Ensure Firebase Admin is initialized
 initFirebaseAdmin();
@@ -54,6 +54,6 @@ async function verifyFirebaseIdToken(idToken) {
   };
 }
 
-module.exports = {
+export {
   verifyFirebaseIdToken
 };

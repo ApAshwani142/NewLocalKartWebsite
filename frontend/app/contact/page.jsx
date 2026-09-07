@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ContactPage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   // Form states
   const [formData, setFormData] = useState({

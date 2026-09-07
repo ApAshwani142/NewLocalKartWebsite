@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
 /**
  * Middleware to authenticate user using JWT Token
@@ -52,8 +52,8 @@ const authorizeRole = (...roles) => {
   };
 };
 
-module.exports = {
+export {
   authenticateUser,
-  protect: authenticateUser,
+  authenticateUser as protect,
   authorizeRole
 };

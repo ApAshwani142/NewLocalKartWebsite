@@ -21,7 +21,7 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   useEffect(() => {
     const fetchProducts = async () => {

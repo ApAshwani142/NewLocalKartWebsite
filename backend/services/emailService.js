@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 /**
  * Send an OTP email using configured Email Provider (SMTP, Resend, or Ethereal test transport)
@@ -159,6 +159,6 @@ async function sendOtpEmail({ email, name, otpCode }) {
   };
 }
 
-module.exports = {
+export {
   sendOtpEmail
 };

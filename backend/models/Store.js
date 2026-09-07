@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const StoreSchema = new mongoose.Schema(
   {
@@ -88,5 +88,5 @@ const StoreSchema = new mongoose.Schema(
 );
 
 // Map Store model strictly to 'shops' collection
-module.exports = mongoose.model('Store', StoreSchema, 'shops');
+export default mongoose.model('Store', StoreSchema, 'shops');
 

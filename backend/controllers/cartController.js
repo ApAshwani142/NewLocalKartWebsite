@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const Cart = require('../models/Cart');
-const Product = require('../models/Product');
+import mongoose from 'mongoose';
+import Cart from '../models/Cart.js';
+import Product from '../models/Product.js';
 
 // Helper to get or create cart for authenticated user
 const getOrCreateCart = async (userId) => {
@@ -208,7 +208,7 @@ const clearCart = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getCart,
   addToCart,
   updateCartItemQuantity,

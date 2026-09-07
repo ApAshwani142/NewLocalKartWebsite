@@ -1,7 +1,10 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Otp = require('../models/Otp');
-const { sendOtpEmail } = require('../services/emailService');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import Otp from '../models/Otp.js';
+import { sendOtpEmail } from '../services/emailService.js';
+import { verifyFirebaseIdToken } from '../services/firebaseService.js';
+import { findOrCreateFirebaseUser, findOrCreateSupabaseUser } from '../services/userService.js';
+import { verifySupabaseToken } from '../services/supabaseService.js';
 
 // Generate JWT token
 const generateToken = (user) => {
@@ -276,9 +279,6 @@ const firebaseLogin = async (req, res) => {
       return res.status(400).json({ message: 'Firebase ID Token is required' });
     }
 
-    const { verifyFirebaseIdToken } = require('../services/firebaseService');
-    const { findOrCreateFirebaseUser } = require('../services/userService');
-
     // 1. Verify Firebase ID Token via Firebase Admin SDK
     const decodedFirebase = await verifyFirebaseIdToken(idToken);
 
@@ -313,7 +313,6 @@ const supabaseLogin = async (req, res) => {
     let sbUser = null;
 
     if (accessToken) {
-      const { verifySupabaseToken } = require('../services/supabaseService');
       try {
         sbUser = await verifySupabaseToken(accessToken);
       } catch (err) {
@@ -330,8 +329,6 @@ const supabaseLogin = async (req, res) => {
     if (!uid && !userEmail) {
       return res.status(400).json({ message: 'Supabase access token, UID, or email is required' });
     }
-
-    const { findOrCreateSupabaseUser } = require('../services/userService');
 
     const result = await findOrCreateSupabaseUser({
       supabaseUid: uid,
@@ -353,7 +350,7 @@ const supabaseLogin = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   registerUser,
   loginUser,
   getUserProfile,

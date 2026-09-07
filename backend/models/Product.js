@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const ReviewSchema = new mongoose.Schema({
   user: {
@@ -122,5 +122,5 @@ ProductSchema.virtual('resolvedImage').get(function () {
 });
 
 // Map Product model strictly to 'products' collection
-module.exports = mongoose.model('Product', ProductSchema, 'products');
+export default mongoose.model('Product', ProductSchema, 'products');
 

@@ -1,13 +1,13 @@
-const Order = require('../models/Order');
-const Store = require('../models/Store');
-const User = require('../models/User');
-const {
+import Order from '../models/Order.js';
+import Store from '../models/Store.js';
+import User from '../models/User.js';
+import {
   notifyShopkeeperNewOrder,
   notifyCustomerOrderAccepted,
   notifyRidersOrderReady,
   notifyCustomerOrderPickedUp,
   notifyCustomerOrderDelivered
-} = require('./notificationService');
+} from './notificationService.js';
 
 /**
  * Create Order & Trigger Shopkeeper FCM Notification
@@ -96,7 +96,7 @@ async function updateOrderStatusWithNotifications(orderId, newStatus) {
   return updatedOrder;
 }
 
-module.exports = {
+export {
   createOrder,
   updateOrderStatusWithNotifications
 };

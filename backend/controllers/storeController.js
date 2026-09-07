@@ -1,6 +1,6 @@
-const Store = require('../models/Store');
-const Product = require('../models/Product');
-const { calculateDistance, estimateDeliveryTime } = require('../utils/locationUtils');
+import Store from '../models/Store.js';
+import Product from '../models/Product.js';
+import { calculateDistance, estimateDeliveryTime } from '../utils/locationUtils.js';
 
 // Default fallback coordinates (Ara, Bihar)
 const DEFAULT_LAT = 25.556;
@@ -99,7 +99,7 @@ const getStoreById = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getStores,
   getStoreById
 };

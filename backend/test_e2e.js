@@ -1,24 +1,24 @@
-const mongoose = require('mongoose');
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+import mongoose from 'mongoose';
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const User = require('./models/User');
-const Product = require('./models/Product');
-const Store = require('./models/Store');
-const Order = require('./models/Order');
-const Cart = require('./models/Cart');
-const Notification = require('./models/Notification');
+import User from './models/User.js';
+import Product from './models/Product.js';
+import Store from './models/Store.js';
+import Order from './models/Order.js';
+import Cart from './models/Cart.js';
+import Notification from './models/Notification.js';
 
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const storeRoutes = require('./routes/stores');
-const orderRoutes = require('./routes/orders');
-const cartRoutes = require('./routes/cart');
-const addressRoutes = require('./routes/addresses');
-const notificationRoutes = require('./routes/notifications');
+import authRoutes from './routes/auth.js';
+import productRoutes from './routes/products.js';
+import storeRoutes from './routes/stores.js';
+import orderRoutes from './routes/orders.js';
+import cartRoutes from './routes/cart.js';
+import addressRoutes from './routes/addresses.js';
+import notificationRoutes from './routes/notifications.js';
 
 const app = express();
 app.use(cors());

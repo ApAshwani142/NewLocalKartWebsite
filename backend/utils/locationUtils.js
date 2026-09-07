@@ -66,7 +66,7 @@ function attachLocationMetrics(entity, userLat, userLng, storeLat, storeLng) {
   };
 }
 
-module.exports = {
+export {
   calculateDistance,
   estimateDeliveryTime,
   attachLocationMetrics

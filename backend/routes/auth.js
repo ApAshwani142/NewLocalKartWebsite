@@ -1,6 +1,5 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   registerUser,
   loginUser,
   getUserProfile,
@@ -9,8 +8,10 @@ const {
   updateFcmToken,
   firebaseLogin,
   supabaseLogin
-} = require('../controllers/authController');
-const { authenticateUser } = require('../middleware/authMiddleware');
+} from '../controllers/authController.js';
+import { authenticateUser } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
@@ -21,4 +22,4 @@ router.get('/me', authenticateUser, getUserProfile);
 router.put('/profile', authenticateUser, updateUserProfile);
 router.put('/fcm-token', authenticateUser, updateFcmToken);
 
-module.exports = router;
+export default router;

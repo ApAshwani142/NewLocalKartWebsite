@@ -1,12 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   getAddresses,
   addAddress,
   updateAddress,
   deleteAddress
-} = require('../controllers/addressController');
-const { authenticateUser } = require('../middleware/authMiddleware');
+} from '../controllers/addressController.js';
+import { authenticateUser } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
 
 router.use(authenticateUser);
 
@@ -15,4 +16,4 @@ router.post('/', addAddress);
 router.put('/:addressId', updateAddress);
 router.delete('/:addressId', deleteAddress);
 
-module.exports = router;
+export default router;

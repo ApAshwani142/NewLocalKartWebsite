@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const OrderSchema = new mongoose.Schema(
   {
@@ -106,4 +106,4 @@ OrderSchema.virtual('deliveryStatus').get(function () {
   return this.status;
 });
 
-module.exports = mongoose.model('Order', OrderSchema, 'orders');
+export default mongoose.model('Order', OrderSchema, 'orders');

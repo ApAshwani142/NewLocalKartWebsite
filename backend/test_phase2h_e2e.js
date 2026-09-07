@@ -1,5 +1,12 @@
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const http = require('http');
-const path = require('path');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 

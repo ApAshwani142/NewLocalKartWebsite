@@ -1,4 +1,4 @@
-const Notification = require('../models/Notification');
+import Notification from '../models/Notification.js';
 
 // @desc    Get logged in user notifications
 // @route   GET /api/notifications
@@ -39,7 +39,7 @@ const markAsRead = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getNotifications,
   markAsRead
 };

@@ -88,7 +88,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState(null);
   const [orderCreated, setOrderCreated] = useState(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   // Guard: Authenticate user & check empty cart
   useEffect(() => {

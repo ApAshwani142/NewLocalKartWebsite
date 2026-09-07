@@ -31,7 +31,7 @@ export default function AccountPage() {
   const [addresses, setAddresses] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  const API_URL = '/api';
 
   // Auth Guard: Redirect if not logged in
   useEffect(() => {

@@ -151,6 +151,6 @@ e-LocalKart details to use for answering questions:
   }
 };
 
-module.exports = {
+export {
   handleChat
 };

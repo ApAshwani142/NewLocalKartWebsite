@@ -1,6 +1,6 @@
-const { admin } = require('../config/firebaseAdmin');
-const Notification = require('../models/Notification');
-const User = require('../models/User');
+import { admin } from '../config/firebaseAdmin.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 /**
  * Send Push Notification via Firebase Cloud Messaging (FCM)
@@ -141,7 +141,7 @@ async function notifyCustomerOrderDelivered(order) {
   });
 }
 
-module.exports = {
+export {
   sendFcmNotification,
   createAndSendNotification,
   notifyShopkeeperNewOrder,

@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // @desc    Submit contact form and email details to the company
@@ -138,4 +138,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
