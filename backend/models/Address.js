@@ -11,9 +11,25 @@ const AddressSchema = new mongoose.Schema({
     type: String,
     default: 'Home'
   },
+  name: {
+    type: String,
+    default: ''
+  },
+  phone: {
+    type: String,
+    default: ''
+  },
+  houseNo: {
+    type: String,
+    default: ''
+  },
   street: {
     type: String,
     required: [true, 'Street address is required']
+  },
+  landmark: {
+    type: String,
+    default: ''
   },
   area: {
     type: String,

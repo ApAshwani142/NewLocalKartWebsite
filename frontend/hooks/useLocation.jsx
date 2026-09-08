@@ -6,6 +6,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export const DEFAULT_LOCATION = {
   city: 'Ara',
   area: 'Grand Trunk Road',
+  street: 'Grand Trunk Road',
+  houseNo: '',
+  landmark: '',
+  fullAddress: 'Grand Trunk Road, Ara, Bihar - 802301',
   pincode: '802301',
   lat: 25.5560,
   lng: 84.6600,
@@ -192,7 +196,14 @@ export function LocationProvider({ children }) {
 
   // Handle manual/click selection
   const selectLocation = (selectedLoc) => {
-    saveAndApplyLocation({ ...selectedLoc, isGps: false }, true);
+    const full = selectedLoc.fullAddress || 
+      `${selectedLoc.houseNo ? selectedLoc.houseNo + ', ' : ''}${selectedLoc.street || selectedLoc.area || ''}${selectedLoc.landmark ? ', Near ' + selectedLoc.landmark : ''}, ${selectedLoc.city || 'Ara'} - ${selectedLoc.pincode || '802301'}`;
+
+    saveAndApplyLocation({
+      ...selectedLoc,
+      fullAddress: full,
+      isGps: Boolean(selectedLoc.isGps)
+    }, true);
     setIsLocationPickerOpen(false);
   };
 

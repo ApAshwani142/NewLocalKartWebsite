@@ -21,10 +21,10 @@ const getAddresses = async (req, res) => {
 const addAddress = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id || req.user.userId;
-    const { label, street, area, city, pincode, lat, lng, isDefault } = req.body;
+    const { name, phone, label, houseNo, street, area, landmark, city, pincode, lat, lng, isDefault } = req.body;
 
-    if (!street) {
-      return res.status(400).json({ message: 'Street address is required' });
+    if (!street && !houseNo) {
+      return res.status(400).json({ message: 'Street or house address is required' });
     }
 
     const existingCount = await Address.countDocuments({ userId });
@@ -36,8 +36,12 @@ const addAddress = async (req, res) => {
 
     const newAddress = await Address.create({
       userId,
+      name: name || req.user.name || '',
+      phone: phone || req.user.phone || '',
       label: label || 'Home',
-      street,
+      houseNo: houseNo || '',
+      street: street || houseNo,
+      landmark: landmark || '',
       area: area || '',
       city: city || 'Ara',
       pincode: pincode || '802301',
@@ -60,7 +64,7 @@ const updateAddress = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id || req.user.userId;
     const { addressId } = req.params;
-    const { label, street, area, city, pincode, lat, lng, isDefault } = req.body;
+    const { name, phone, label, houseNo, street, area, landmark, city, pincode, lat, lng, isDefault } = req.body;
 
     const address = await Address.findOne({ _id: addressId, userId });
     if (!address) {
@@ -72,8 +76,12 @@ const updateAddress = async (req, res) => {
       address.isDefault = true;
     }
 
+    if (name !== undefined) address.name = name;
+    if (phone !== undefined) address.phone = phone;
     if (label !== undefined) address.label = label;
+    if (houseNo !== undefined) address.houseNo = houseNo;
     if (street !== undefined) address.street = street;
+    if (landmark !== undefined) address.landmark = landmark;
     if (area !== undefined) address.area = area;
     if (city !== undefined) address.city = city;
     if (pincode !== undefined) address.pincode = pincode;

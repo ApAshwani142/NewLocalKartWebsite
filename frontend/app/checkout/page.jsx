@@ -4,73 +4,31 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
+import { useLocation } from '@/hooks/useLocation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { 
+  ArrowLeft, Lock, Loader2, AlertCircle, MapPin, 
+  CheckCircle2, Edit3, User, Phone, Building2 
+} from 'lucide-react';
 
 // Modular Checkout Components
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
 import CheckoutStepper from '@/components/checkout/CheckoutStepper';
-import SavedAddressSelector from '@/components/checkout/SavedAddressSelector';
-import AddressForm from '@/components/checkout/AddressForm';
 import OrderSummaryCard from '@/components/checkout/OrderSummaryCard';
 import PaymentOptions from '@/components/checkout/PaymentOptions';
 import MobileStickyFooter from '@/components/checkout/MobileStickyFooter';
 import OrderSuccessModal from '@/components/checkout/OrderSuccessModal';
+import LocationModal from '@/components/LocationModal';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
   const { cartItems, subtotal, deliveryFee, tax, totalPrice, clearCart } = useCart();
+  const { location, selectLocation } = useLocation();
 
-  // Steps: 1 = Cart, 2 = Address, 3 = Payment, 4 = Review/Success
-  const [step, setStep] = useState(2);
-
-  // Default demo saved addresses for logged-in users + localStorage addresses
-  const [savedAddresses, setSavedAddresses] = useState([
-    {
-      id: 'addr_1',
-      name: 'Priyanshu Pathak',
-      phone: '9876543210',
-      type: 'Home',
-      houseNo: 'Flat 402, Royal Residency',
-      locality: 'Boring Road',
-      landmark: 'Near AN College',
-      city: 'Patna',
-      state: 'Bihar',
-      postalCode: '800001',
-      isDefault: true
-    },
-    {
-      id: 'addr_2',
-      name: 'Priyanshu Pathak',
-      phone: '9876543210',
-      type: 'Work',
-      houseNo: 'Plot 12, Tech Park, Floor 3',
-      locality: 'Kankarbagh Main Road',
-      landmark: 'Opposite Dominoes',
-      city: 'Patna',
-      state: 'Bihar',
-      postalCode: '800020',
-      isDefault: false
-    }
-  ]);
-
-  const [selectedAddressId, setSelectedAddressId] = useState('addr_1');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    pincode: '',
-    houseNo: '',
-    locality: '',
-    landmark: '',
-    city: 'Patna',
-    state: 'Bihar',
-    addressType: 'Home',
-    isDefault: false
-  });
+  // Step 3 = Payment & Review (Step 2 Address is already selected at site start!)
+  const [step, setStep] = useState(3);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   // Payment Selection States
   const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'CARD' | 'COD' | 'WALLET' | 'NETBANKING'
@@ -103,135 +61,56 @@ export default function CheckoutPage() {
     }
   }, [cartItems, authLoading, user, orderCreated, router]);
 
-  // Sync user details to form & load saved custom addresses from localStorage
+  // If user has saved database addresses and none selected yet, auto-select default from DB
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        fullName: prev.fullName || user.name || '',
-        phone: prev.phone || user.phone || ''
-      }));
+    if (token && !location.fullAddress) {
+      fetch(`${API_URL}/addresses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            const def = data.find((a) => a.isDefault) || data[0];
+            const full = `${def.houseNo ? def.houseNo + ', ' : ''}${def.street}${
+              def.landmark ? ', Near ' + def.landmark : ''
+            }, ${def.city} - ${def.pincode}`;
 
-      try {
-        const stored = localStorage.getItem('localkart_saved_addresses');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setSavedAddresses(parsed);
-            const def = parsed.find((a) => a.isDefault) || parsed[0];
-            if (def) setSelectedAddressId(def.id);
+            selectLocation({
+              city: def.city,
+              area: def.area || def.street,
+              street: def.street,
+              houseNo: def.houseNo,
+              landmark: def.landmark,
+              pincode: def.pincode,
+              lat: def.lat,
+              lng: def.lng,
+              fullAddress: full,
+              name: def.name || user?.name || '',
+              phone: def.phone || user?.phone || '',
+              label: def.label
+            });
           }
-        }
-      } catch (e) {
-        console.warn('Failed to parse saved addresses:', e);
-      }
+        })
+        .catch(() => {});
     }
-  }, [user]);
+  }, [token, location.fullAddress, selectLocation, user]);
 
-  // Selected address object helper
-  const activeAddress = savedAddresses.find((a) => a.id === selectedAddressId) || savedAddresses[0];
+  // Formatted active delivery address
+  const activeDeliveryAddress =
+    location.fullAddress ||
+    `${location.street || location.area || 'Grand Trunk Road'}, ${location.city || 'Ara'} - ${
+      location.pincode || '802301'
+    }`;
 
-  // Geolocation auto-fill handler
-  const handleCurrentLocationDetected = (locData) => {
-    setFormData((prev) => ({
-      ...prev,
-      city: locData.city || prev.city,
-      state: locData.state || prev.state,
-      locality: locData.locality || prev.locality,
-      houseNo: locData.houseNo || prev.houseNo,
-      pincode: locData.pincode || prev.pincode
-    }));
-    setIsFormOpen(true); // Open form so user can review detected details
-  };
-
-  // Add / Save Address handler
-  const handleSaveAddress = (e) => {
-    e.preventDefault();
-    if (
-      !formData.fullName ||
-      !formData.phone ||
-      !formData.pincode ||
-      !formData.houseNo ||
-      !formData.locality ||
-      !formData.city ||
-      !formData.state
-    ) {
-      setError('Please fill in all required address fields');
-      return;
-    }
-
-    const newAddr = {
-      id: `addr_${Date.now()}`,
-      name: formData.fullName,
-      phone: formData.phone,
-      type: formData.addressType || 'Home',
-      houseNo: formData.houseNo,
-      streetAddress: formData.houseNo,
-      locality: formData.locality,
-      landmark: formData.landmark,
-      city: formData.city,
-      state: formData.state,
-      postalCode: formData.pincode,
-      pincode: formData.pincode,
-      isDefault: formData.isDefault
-    };
-
-    const updated = [newAddr, ...savedAddresses.map((a) => (formData.isDefault ? { ...a, isDefault: false } : a))];
-    setSavedAddresses(updated);
-    setSelectedAddressId(newAddr.id);
-    setIsFormOpen(false);
-    setError(null);
-
-    try {
-      localStorage.setItem('localkart_saved_addresses', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Failed to save to localStorage:', e);
-    }
-  };
-
-  // Proceed from Address Step 2 to Payment Step 3
-  const handleProceedToPayment = () => {
-    if (isFormOpen) {
-      // Validate active form if open
-      if (
-        !formData.fullName ||
-        !formData.phone ||
-        !formData.pincode ||
-        !formData.houseNo ||
-        !formData.locality ||
-        !formData.city ||
-        !formData.state
-      ) {
-        setError('Please complete the address form or select a saved address');
-        return;
-      }
-    }
-    setError(null);
-    setStep(3);
-  };
+  const recipientName = location.name || user?.name || 'Customer';
+  const recipientPhone = location.phone || user?.phone || 'Mobile not provided';
 
   // Submit Order API Handler
   const handlePlaceOrder = async () => {
     setLoading(true);
     setError(null);
 
-    const targetAddr = isFormOpen
-      ? {
-          name: formData.fullName,
-          phone: formData.phone,
-          houseNo: formData.houseNo,
-          locality: formData.locality,
-          landmark: formData.landmark,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode
-        }
-      : activeAddress;
-
-    const fullDeliveryAddress = `${targetAddr.houseNo || targetAddr.streetAddress}, ${targetAddr.locality}${
-      targetAddr.landmark ? ', Near ' + targetAddr.landmark : ''
-    }, ${targetAddr.city}, ${targetAddr.state} - ${targetAddr.postalCode || targetAddr.pincode}. Contact: ${targetAddr.name} (${targetAddr.phone})`;
-
+    const fullDeliveryAddress = `${activeDeliveryAddress}. Contact: ${recipientName} (${recipientPhone})`;
     const backendPaymentMethod = paymentMethod === 'COD' ? 'COD' : 'Razorpay';
 
     try {
@@ -262,7 +141,7 @@ export default function CheckoutPage() {
       setOrderCreated(orderData.order || orderData);
       setStep(4); // Success review step
     } catch (err) {
-      setError(err.message || 'Something went wrong while placing order');
+      setError(err.message || 'Something went wrong while placing your order.');
     } finally {
       setLoading(false);
     }
@@ -273,11 +152,11 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#f9fafb] flex flex-col font-sans antialiased text-gray-900 pb-24 md:pb-12">
-      {/* Requirement 1: Distraction-free Header (Only logo + Secure Checkout badge) */}
+      {/* Header: Clean logo & back navigation */}
       <CheckoutHeader onBackToCart={() => router.push('/')} />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
-        {/* Requirement 2: 4-Step Animated Progress Stepper */}
+        {/* Stepper (Step 1 Cart & Step 2 Address marked completed) */}
         <CheckoutStepper step={step} setStep={setStep} />
 
         {/* Global Error Banner */}
@@ -296,115 +175,61 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* Animated Step Content */}
-        <AnimatePresence mode="wait">
-          {/* STEP 2: ADDRESS STEP */}
-          {step === 2 && (
-            <motion.div
-              key="step-address"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto"
-            >
-              {/* Left Column: Saved Addresses & Form (7 Cols) */}
-              <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 shadow-premium p-5 md:p-8 flex flex-col gap-6 text-left">
-                {/* Saved Address Selector (Supports instant selection & skip UX) */}
-                <SavedAddressSelector
-                  savedAddresses={savedAddresses}
-                  selectedAddressId={selectedAddressId}
-                  onSelectAddress={(addr) => setSelectedAddressId(addr.id)}
-                  onAddNewAddress={() => {
-                    setFormData({
-                      fullName: user?.name || '',
-                      phone: user?.phone || '',
-                      pincode: '',
-                      houseNo: '',
-                      locality: '',
-                      landmark: '',
-                      city: 'Patna',
-                      state: 'Bihar',
-                      addressType: 'Home',
-                      isDefault: false
-                    });
-                    setIsFormOpen(true);
-                  }}
-                  isFormOpen={isFormOpen}
-                  onToggleForm={() => setIsFormOpen(!isFormOpen)}
-                  onCurrentLocationDetected={handleCurrentLocationDetected}
-                />
+        {/* STEP 3: PAYMENT & CONFIRMED DELIVERY DETAILS */}
+        {step === 3 && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto">
+            {/* Left Column: Delivery Address Summary + Payment Options (7 Cols) */}
+            <div className="lg:col-span-7 flex flex-col gap-6 text-left">
+              {/* Confirmed Delivery Destination Card */}
+              <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-5 md:p-6 flex flex-col gap-3">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-emerald-100 text-[#0e3e26]">
+                      <MapPin size={18} className="stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                          Delivery Destination
+                        </h3>
+                        <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 size={10} className="stroke-[3]" /> Selected at Start
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Your order will be delivered to this verified address
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Manual Address Form (Opened via + Add New Address or Change) */}
-                <AnimatePresence>
-                  {isFormOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="border-t border-gray-100 pt-6 mt-2 overflow-hidden"
-                    >
-                      <AddressForm
-                        formData={formData}
-                        setFormData={setFormData}
-                        onSubmit={handleSaveAddress}
-                        onCancel={() => setIsFormOpen(false)}
-                        error={error}
-                        setError={setError}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Navigation Buttons Row */}
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-gray-100 pt-6 mt-2">
+                  {/* Change Address Button */}
                   <button
                     type="button"
-                    onClick={() => router.push('/')}
-                    className="w-full sm:w-auto px-6 py-3.5 border-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
+                    onClick={() => setIsLocationModalOpen(true)}
+                    className="flex items-center gap-1 text-xs font-bold text-[#0e3e26] hover:text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100/60 px-3 py-1.5 rounded-xl border border-emerald-200 transition cursor-pointer"
                   >
-                    <ArrowLeft size={15} /> Back to Cart
+                    <Edit3 size={12} /> Change
                   </button>
+                </div>
 
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleProceedToPayment}
-                    className="w-full sm:w-auto px-7 py-3.5 bg-[#105634] hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition cursor-pointer shadow-lg shadow-emerald-500/15"
-                  >
-                    <span>Continue to Payment • ₹{totalPrice}</span>
-                    <ArrowRight size={15} />
-                  </motion.button>
+                {/* Address Details */}
+                <div className="bg-gray-50/80 rounded-2xl p-3.5 border border-gray-150 flex flex-col gap-1.5">
+                  <p className="text-xs font-extrabold text-slate-900 leading-relaxed">
+                    {activeDeliveryAddress}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600 mt-1 pt-1.5 border-t border-gray-200/60">
+                    <span className="flex items-center gap-1.5">
+                      <User size={13} className="text-[#0e3e26]" /> {recipientName}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Phone size={13} className="text-[#0e3e26]" /> {recipientPhone}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Right Column: Sticky Order Summary (5 Cols) */}
-              <div className="lg:col-span-5 w-full">
-                <OrderSummaryCard
-                  cartItems={cartItems}
-                  subtotal={subtotal}
-                  deliveryFee={deliveryFee}
-                  tax={tax}
-                  totalPrice={totalPrice}
-                  discountAmount={discountAmount}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 3: PAYMENT STEP */}
-          {step === 3 && (
-            <motion.div
-              key="step-payment"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-6xl mx-auto"
-            >
-              {/* Left Column: Payment Options (7 Cols) */}
-              <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 shadow-premium p-5 md:p-8 flex flex-col gap-6 text-left">
+              {/* Payment Methods Card */}
+              <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-5 md:p-8 flex flex-col gap-6">
                 <PaymentOptions
                   paymentMethod={paymentMethod}
                   setPaymentMethod={setPaymentMethod}
@@ -430,10 +255,10 @@ export default function CheckoutPage() {
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between border-t border-gray-100 pt-6 mt-2">
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
-                    className="w-full sm:w-auto px-6 py-3.5 border-2 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
+                    onClick={() => router.push('/')}
+                    className="w-full sm:w-auto px-6 py-3.5 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer"
                   >
-                    <ArrowLeft size={15} /> Back to Address
+                    <ArrowLeft size={15} /> Back to Shopping
                   </button>
 
                   <motion.button
@@ -442,7 +267,7 @@ export default function CheckoutPage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handlePlaceOrder}
                     disabled={loading}
-                    className="w-full sm:flex-1 py-4 bg-[#105634] hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition cursor-pointer shadow-xl shadow-emerald-500/20 disabled:opacity-50"
+                    className="w-full sm:flex-1 py-4 bg-[#0e3e26] hover:bg-[#105634] text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 transition cursor-pointer shadow-md shadow-emerald-900/10 disabled:opacity-50"
                   >
                     {loading ? (
                       <>
@@ -452,45 +277,52 @@ export default function CheckoutPage() {
                     ) : (
                       <>
                         <Lock size={15} />
-                        <span>Pay ₹{totalPrice} Securely</span>
+                        <span>Confirm & Pay ₹{totalPrice}</span>
                       </>
                     )}
                   </motion.button>
                 </div>
               </div>
+            </div>
 
-              {/* Right Column: Sticky Order Summary (5 Cols) */}
-              <div className="lg:col-span-5 w-full">
-                <OrderSummaryCard
-                  cartItems={cartItems}
-                  subtotal={subtotal}
-                  deliveryFee={deliveryFee}
-                  tax={tax}
-                  totalPrice={totalPrice}
-                  discountAmount={discountAmount}
-                />
-              </div>
-            </motion.div>
-          )}
+            {/* Right Column: Order Summary (5 Cols) */}
+            <div className="lg:col-span-5 w-full">
+              <OrderSummaryCard
+                cartItems={cartItems}
+                subtotal={subtotal}
+                deliveryFee={deliveryFee}
+                tax={tax}
+                totalPrice={totalPrice}
+                discountAmount={discountAmount}
+              />
+            </div>
+          </div>
+        )}
 
-          {/* STEP 4: ORDER SUCCESS */}
-          {step === 4 && (
-            <OrderSuccessModal
-              key="step-success"
-              orderCreated={orderCreated}
-              totalPrice={totalPrice}
-            />
-          )}
-        </AnimatePresence>
+        {/* STEP 4: SUCCESS MODAL */}
+        {step === 4 && orderCreated && (
+          <OrderSuccessModal
+            order={orderCreated}
+            onContinueShopping={() => {
+              router.push('/');
+            }}
+          />
+        )}
       </main>
 
-      {/* Requirement 10: Mobile Sticky Bottom CTA Footer */}
+      {/* Mobile Sticky Footer */}
       <MobileStickyFooter
         step={step}
         totalPrice={totalPrice}
-        onContinue={step === 2 ? handleProceedToPayment : handlePlaceOrder}
-        onBack={() => (step === 3 ? setStep(2) : router.push('/'))}
+        onContinue={handlePlaceOrder}
+        onBack={() => router.push('/')}
         loading={loading}
+      />
+
+      {/* Location Modal for changing address directly in checkout */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
       />
     </div>
   );

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
-import { useTheme } from '@/hooks/useTheme';
 import { useLocation } from '@/hooks/useLocation';
 import LocationModal from '@/components/LocationModal';
 import BottomNav from '@/components/BottomNav';
@@ -18,14 +17,11 @@ import {
 export default function Header({ onCartClick }) {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
-  const { theme, toggleTheme } = useTheme();
   const { location, isLocationPickerOpen, setIsLocationPickerOpen } = useLocation();
   const router = useRouter();
   
   const [searchVal, setSearchVal] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const isDark = theme === 'dark';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -159,8 +155,8 @@ export default function Header({ onCartClick }) {
                 onClick={onCartClick}
                 className="flex items-center gap-2 text-brand-dark px-4 py-2 rounded-full border font-bold text-xs tracking-wider shadow-xs uppercase cursor-pointer"
                 style={{
-                  backgroundColor: isDark ? 'rgba(16,185,129,0.12)' : '#e8f5e9',
-                  borderColor: isDark ? 'rgba(16,185,129,0.3)' : '#bbf7d0',
+                  backgroundColor: '#e8f5e9',
+                  borderColor: '#bbf7d0',
                 }}
               >
                 <ShoppingCart size={16} className="text-brand-dark font-black" />
@@ -170,41 +166,6 @@ export default function Header({ onCartClick }) {
                     {cartCount}
                   </span>
                 )}
-              </button>
-
-              {/* Instant Theme Toggle Button */}
-              <button
-                type="button"
-                onClick={toggleTheme}
-                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label="Toggle dark mode"
-                className="relative flex items-center cursor-pointer select-none shrink-0"
-                style={{ width: '56px', height: '28px' }}
-              >
-                <span
-                  className="absolute inset-0 rounded-full border"
-                  style={{
-                    background: isDark
-                      ? 'linear-gradient(135deg, #0f1923 0%, #1a2e4a 100%)'
-                      : 'linear-gradient(135deg, #fef9c3 0%, #fde68a 100%)',
-                    borderColor: isDark ? '#1e3a2f' : '#fcd34d',
-                  }}
-                />
-                <span
-                  className="absolute top-0.5 rounded-full flex items-center justify-center shadow-md"
-                  style={{
-                    width: '22px',
-                    height: '22px',
-                    left: isDark ? 'calc(100% - 24px)' : '3px',
-                    background: isDark ? '#94a3b8' : '#f59e0b',
-                  }}
-                >
-                  {isDark ? (
-                    <Moon size={11} strokeWidth={2} className="text-slate-900" />
-                  ) : (
-                    <Sun size={12} strokeWidth={2.5} className="text-amber-900" />
-                  )}
-                </span>
               </button>
             </div>
           </div>
@@ -352,41 +313,6 @@ export default function Header({ onCartClick }) {
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Quick Navigation
             </span>
-          </div>
-
-          {/* Theme Switcher Row */}
-          <div
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border"
-            style={{ backgroundColor: 'var(--bg-surface-2)', borderColor: 'var(--border-color)' }}
-          >
-            <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
-              {isDark ? '🌙 Dark Mode' : '☀️ Light Mode'}
-            </span>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="relative flex items-center cursor-pointer select-none"
-              style={{ width: '48px', height: '24px' }}
-            >
-              <span
-                className="absolute inset-0 rounded-full border"
-                style={{
-                  background: isDark ? '#1a2e4a' : '#fde68a',
-                  borderColor: isDark ? '#1e3a2f' : '#fcd34d',
-                }}
-              />
-              <span
-                className="absolute top-0.5 rounded-full flex items-center justify-center shadow-xs"
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  left: isDark ? 'calc(100% - 22px)' : '2px',
-                  background: isDark ? '#94a3b8' : '#f59e0b',
-                }}
-              >
-                {isDark ? <Moon size={10} className="text-slate-900" /> : <Sun size={11} className="text-amber-900" />}
-              </span>
-            </button>
           </div>
 
           {/* Links list */}

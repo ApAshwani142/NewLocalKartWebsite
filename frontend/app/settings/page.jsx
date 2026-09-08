@@ -7,17 +7,15 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CartModal from '@/components/CartModal';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/hooks/useTheme';
 import { useCart } from '@/hooks/useCart';
 import { 
-  ArrowLeft, User, Mail, Phone, Lock, Moon, Sun, Bell, 
+  ArrowLeft, User, Mail, Phone, Lock, Bell, 
   Shield, Check, AlertCircle, Loader2, Save, LogOut, Trash2
 } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user, token, loading, logout, setUser } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const { cartCount } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -38,8 +36,8 @@ export default function SettingsPage() {
 
   // UI state
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [errorMessage, setErrorMessage] = useState(null);
+  const [message, setMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const API_URL = '/api';
 
@@ -109,8 +107,6 @@ export default function SettingsPage() {
     );
   }
 
-  const isDark = theme === 'dark';
-
   return (
     <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 text-slate-900 dark:text-white font-sans">
       <div className="hidden md:block">
@@ -153,30 +149,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* 1. Appearance & Instant Theme */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:border border-gray-100 dark:border-slate-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center">
-                {isDark ? <Moon size={18} /> : <Sun size={18} />}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">App Appearance</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isDark ? 'Dark Mode (Active)' : 'Light Mode (Active)'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="px-3.5 py-1.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-xs font-bold cursor-pointer hover:border-emerald-500"
-            >
-              Switch to {isDark ? 'Light' : 'Dark'}
-            </button>
-          </div>
-        </div>
+        {/* Personal Information Form */}
 
         {/* 2. Personal Information Form */}
         <form onSubmit={handleSaveProfile} className="bg-white dark:bg-slate-900 rounded-2xl md:border border-gray-100 dark:border-slate-800 p-5 shadow-xs flex flex-col gap-4 text-left">
