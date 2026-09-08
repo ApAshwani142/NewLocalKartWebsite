@@ -69,8 +69,8 @@ async function runE2ETest() {
   const testOrderId = createdOrder._id;
   console.log(`TEST Order Created Successfully! ID: ${testOrderId}, Status: ${createdOrder.status}, TotalAmount: ${createdOrder.totalAmount || createdOrder.totalPrice}`);
 
-  // 3. Connect directly to Atlas database to inspect 'orders', 'order_items', and updated stock
-  await mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://priyanshupathak7371_db_user:cKVgxYXIU7XiCJeQ@cluster0.ouicapq.mongodb.net/e-localkart');
+  // 3. Connect directly to database to inspect 'orders', 'order_items', and updated stock
+  await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/localkart');
   
   const dbOrders = await mongoose.connection.db.collection('orders').find({ _id: new mongoose.Types.ObjectId(testOrderId) }).toArray();
   console.log(`3. MongoDB Atlas 'orders' collection count for ID ${testOrderId}: ${dbOrders.length}`);

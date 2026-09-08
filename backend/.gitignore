@@ -47,6 +47,7 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+scratch/
 
 # Uploads (optional)
 uploads/

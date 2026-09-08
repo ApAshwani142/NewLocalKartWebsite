@@ -21,6 +21,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.disable('x-powered-by');
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
