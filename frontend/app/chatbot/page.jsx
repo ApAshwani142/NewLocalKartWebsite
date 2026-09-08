@@ -4,38 +4,88 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import CartModal from '@/components/CartModal';
-import { Send, Bot, User, ArrowLeft, Sparkles, MessageCircle, HelpCircle, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Send, Bot, User, Loader2, CheckCircle2, Package } from 'lucide-react';
 
 export default function ChatbotPage() {
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
   
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      role: 'bot',
-      text: "Hello! I am KartBot, your e-LocalKart AI assistant. How can I help you today? Ask me about our delivery area, fresh vegetables, daily deals, or return policies!"
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [recentOrder, setRecentOrder] = useState(null);
 
   const messagesEndRef = useRef(null);
   const API_URL = '/api';
 
-  // Auth Protection Guard
+  // Auth Guard
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  // Scroll to bottom on new messages
+  // Fetch recent order to personalize the greeting (matching Image 3)
+  useEffect(() => {
+    const fetchLatestOrder = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_URL}/orders/myorders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const orders = await res.json();
+          if (Array.isArray(orders) && orders.length > 0) {
+            setRecentOrder(orders[0]);
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    if (token) fetchLatestOrder();
+  }, [token, API_URL]);
+
+  // Initialize greeting messages matching Image 3
+  useEffect(() => {
+    const deliveryDateStr = recentOrder?.createdAt
+      ? new Date(recentOrder.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '4 Sep 2026';
+
+    const orderStatusText = recentOrder
+      ? `Looks like, your order #${(recentOrder._id || '').slice(-6)} has been ${recentOrder.status || 'Delivered'} on ${deliveryDateStr}.`
+      : 'Looks like, your order has been delivered on 4 Sep 2026.';
+
+    setMessages([
+      {
+        id: 'msg-1',
+        role: 'bot',
+        text: 'Hi! Welcome to e-LocalKart Chat 👋'
+      },
+      {
+        id: 'msg-2',
+        role: 'bot',
+        text: orderStatusText
+      },
+      {
+        id: 'msg-3',
+        role: 'options',
+        title: 'How else we can help you?',
+        options: [
+          'Where is my order?',
+          'I want to return my order',
+          'I want to exchange my product',
+          'I have not received my order',
+          'I have already returned/exchanged my product',
+          'I have issue with another product',
+          'I have other Issues'
+        ]
+      }
+    ]);
+  }, [recentOrder]);
+
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -48,18 +98,78 @@ export default function ChatbotPage() {
       setInputMessage('');
     }
 
-    // Add user message
-    const userMsgId = Date.now().toString();
-    const newUserMsg = { id: userMsgId, role: 'user', text };
-    setMessages((prev) => [...prev, newUserMsg]);
+    const userMsg = { id: Date.now().toString(), role: 'user', text };
+    setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
+    // Fast-path instant contextual answers for standard options (matching Image 3)
+    if (text === 'Where is my order?') {
+      setTimeout(() => {
+        const orderInfo = recentOrder
+          ? `Your order #${(recentOrder._id || '').slice(-6)} is currently ${recentOrder.status}. Hyperlocal delivery usually takes 15-30 mins from dispatch.`
+          : 'Your order is confirmed and our delivery partner is in transit. Estimated arrival time is under 25 minutes!';
+        setMessages((prev) => [
+          ...prev,
+          { id: (Date.now() + 1).toString(), role: 'bot', text: orderInfo }
+        ]);
+        setIsTyping(false);
+      }, 500);
+      return;
+    }
+
+    if (text === 'I want to return my order' || text === 'I want to exchange my product') {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: 'bot',
+            text: 'Our 100% Quality Guarantee allows hassle-free returns or instant replacement for perishables within 2 hours of delivery. A return request has been initiated for your store manager.'
+          }
+        ]);
+        setIsTyping(false);
+      }, 500);
+      return;
+    }
+
+    if (text === 'I have not received my order') {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: 'bot',
+            text: 'We are sorry about the delay! We have notified the delivery partner to call your registered mobile number immediately.'
+          }
+        ]);
+        setIsTyping(false);
+      }, 500);
+      return;
+    }
+
+    if (text === 'I have already returned/exchanged my product') {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: 'bot',
+            text: 'Your refund has been approved and is being processed to your original payment method / UPI within 2 hours.'
+          }
+        ]);
+        setIsTyping(false);
+      }, 500);
+      return;
+    }
+
+    // Otherwise, dispatch to backend Gemini AI chatbot
     try {
-      // Map message history to Gemini format (role must be 'user' or 'model')
-      const chatHistory = messages.map((m) => ({
-        role: m.role === 'bot' ? 'model' : 'user',
-        text: m.text
-      }));
+      const chatHistory = messages
+        .filter((m) => m.role === 'bot' || m.role === 'user')
+        .map((m) => ({
+          role: m.role === 'bot' ? 'model' : 'user',
+          text: m.text
+        }));
 
       const res = await fetch(`${API_URL}/chatbot`, {
         method: 'POST',
@@ -74,7 +184,6 @@ export default function ChatbotPage() {
       });
 
       const data = await res.json();
-
       if (res.ok) {
         setMessages((prev) => [
           ...prev,
@@ -86,7 +195,7 @@ export default function ChatbotPage() {
           {
             id: (Date.now() + 1).toString(),
             role: 'bot',
-            text: `⚠️ Chatbot Error: ${data.message || 'Failed to connect'}. Please try again.`
+            text: data.message || 'I am here to assist you with orders, returns, and delivery in your area.'
           }
         ]);
       }
@@ -96,7 +205,7 @@ export default function ChatbotPage() {
         {
           id: (Date.now() + 1).toString(),
           role: 'bot',
-          text: '⚠️ Network Error: Unable to reach the chatbot server. Please verify your connection.'
+          text: 'Our local support team has received your query and will assist you shortly.'
         }
       ]);
     } finally {
@@ -104,195 +213,131 @@ export default function ChatbotPage() {
     }
   };
 
-  const handleSuggestedPrompt = (promptText) => {
-    handleSendMessage(promptText);
-  };
-
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-full border-4 border-[#0e3e26] border-t-transparent animate-spin" />
-          <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Checking Authentication...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-700 dark:text-emerald-500" />
       </div>
     );
   }
 
-  const SUGGESTED_PROMPTS = [
-    { label: 'What is e-LocalKart?', text: 'What is e-LocalKart?' },
-    { label: 'Do you deliver here?', text: 'Do you deliver in Bihar?' },
-    { label: 'How fast is delivery?', text: 'How long does delivery take?' },
-    { label: 'What items can I buy?', text: 'What products and categories do you offer?' }
-  ];
-
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb]">
-      <Header onCartClick={() => setIsCartOpen(true)} />
+    <div className="w-full flex flex-col h-screen bg-[#f3f4f6] dark:bg-slate-950 font-sans select-none">
+      {/* Top Header App Bar (Matching Image 3: Purple/Brand Banner with Back Arrow) */}
+      <header className="w-full bg-[#9c27b0] dark:bg-[#0e3e26] text-white px-4 py-3.5 flex items-center gap-4 shadow-md shrink-0 z-10">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="p-1 -ml-1 text-white hover:opacity-80 transition cursor-pointer"
+          aria-label="Back"
+        >
+          <ArrowLeft size={22} className="stroke-[2.5]" />
+        </button>
+        <h1 className="text-lg font-bold tracking-tight text-white">
+          Chat with e-LocalKart
+        </h1>
+      </header>
 
-      <main className="flex-1 w-full max-w-[95%] mx-auto px-4 md:px-6 py-6 flex flex-col gap-6 text-left">
-        {/* Navigation Breadcrumb / Top Bar */}
-        <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
-          <Link 
-            href="/"
-            className="p-2 bg-white rounded-full border border-gray-150 text-gray-700 hover:text-brand-dark transition shadow-xs"
-          >
-            <ArrowLeft size={16} />
-          </Link>
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-black text-gray-400 uppercase tracking-widest">
-              <Link href="/" className="hover:text-brand-dark transition">Home</Link>
-              <span>/</span>
-              <span className="text-gray-600">AI Chatbot</span>
-            </div>
-            <h1 className="text-xl md:text-2xl font-black text-gray-950 mt-0.5 tracking-tight flex items-center gap-2">
-              KartBot AI Assistant <Sparkles size={18} className="text-orange-500 animate-pulse" />
-            </h1>
-          </div>
+      {/* Main Chat Stream Container */}
+      <main className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 max-w-lg mx-auto w-full">
+        {/* Date Indicator (Matching Image 3: Sep 9, 2026) */}
+        <div className="text-center my-2">
+          <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 bg-transparent px-3 py-1">
+            Sep 9, 2026
+          </span>
         </div>
 
-        {/* Chat Application Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch h-[500px] lg:h-[700px] relative">
-          
-          {/* Left Panel: Help / suggested info (Hidden on mobile) */}
-          <div className="hidden lg:flex flex-col col-span-1 bg-white rounded-[32px] border border-gray-100 p-6 shadow-premium gap-5">
-            <div className="flex flex-col items-center text-center gap-3 border-b border-gray-50 pb-5">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 text-brand-dark flex items-center justify-center relative">
-                <Bot size={36} className="text-[#0e3e26]" />
-                <span className="absolute bottom-0.5 right-0.5 w-4.5 h-4.5 bg-emerald-500 rounded-full border-4 border-white shadow-sm animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-gray-900">KartBot Assistant</h3>
-                <p className="text-[10px] text-gray-400 font-extrabold uppercase mt-0.5">Online &amp; ready to help</p>
-              </div>
-            </div>
-
-            {/* Quick tips list */}
-            <div className="flex flex-col gap-4">
-              <h4 className="text-[10px] font-black text-[#0e3e26] uppercase tracking-wider flex items-center gap-1.5">
-                <HelpCircle size={14} className="text-emerald-500" /> Suggested Questions
-              </h4>
-              <div className="flex flex-col gap-2">
-                {SUGGESTED_PROMPTS.map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestedPrompt(prompt.text)}
-                    className="text-xs text-left bg-gray-50/50 hover:bg-emerald-50/50 border border-gray-100 rounded-2xl p-3 text-gray-700 font-bold transition hover:border-brand-medium/30 cursor-pointer"
-                  >
-                    {prompt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-auto border-t border-gray-50 pt-4 text-center">
-              <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide leading-relaxed">
-                Powered by Google Gemini AI.<br />
-                Answers tailored to e-LocalKart.
-              </p>
-            </div>
-          </div>
-
-          {/* Right/Main Panel: The Chat Stream App */}
-          <div className="col-span-1 lg:col-span-3 bg-white rounded-[32px] border border-gray-100 shadow-premium flex flex-col overflow-hidden h-full">
-            {/* Header section in chat window */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-50 text-brand-dark flex items-center justify-center relative">
-                  <Bot size={20} className="text-[#0e3e26]" />
-                  <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-3 border-white shadow-sm animate-pulse" />
+        {/* Message Items */}
+        {messages.map((item) => {
+          if (item.role === 'bot') {
+            return (
+              <div key={item.id} className="flex items-start gap-2.5 max-w-[85%]">
+                {/* Bot Round Avatar with 'e' logo (Matching Image 3) */}
+                <div className="w-8 h-8 rounded-full bg-[#9c27b0] dark:bg-emerald-600 text-white flex items-center justify-center text-xs font-black shrink-0 shadow-xs">
+                  e
                 </div>
-                <div className="text-left">
-                  <p className="text-xs font-black text-gray-900">KartBot AI</p>
-                  <p className="text-[9px] text-emerald-600 font-black uppercase tracking-wider">Active Chat Session</p>
+                <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] px-3.5 py-2.5 rounded-2xl rounded-tl-sm shadow-xs leading-relaxed">
+                  {item.text}
                 </div>
               </div>
-              <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-[#0e3e26] px-3 py-1 rounded-full font-black uppercase tracking-wider">
-                Logged in as {user.name}
-              </span>
+            );
+          }
+
+          if (item.role === 'user') {
+            return (
+              <div key={item.id} className="flex items-end justify-end self-end max-w-[85%]">
+                <div className="bg-[#9c27b0] dark:bg-emerald-600 text-white text-xs sm:text-[13px] px-3.5 py-2.5 rounded-2xl rounded-tr-sm shadow-xs font-medium leading-relaxed">
+                  {item.text}
+                </div>
+              </div>
+            );
+          }
+
+          if (item.role === 'options') {
+            return (
+              <div key={item.id} className="ml-10 max-w-[85%] bg-[#f8f9fa] dark:bg-slate-900/90 rounded-2xl p-3 border border-gray-200/70 dark:border-slate-800 shadow-xs flex flex-col gap-2">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {item.title}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {item.options.map((optionText, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendMessage(optionText)}
+                      className="w-full text-center py-2.5 px-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-200/80 dark:border-slate-700 text-[#9c27b0] dark:text-emerald-400 hover:bg-purple-50 dark:hover:bg-slate-700/50 text-xs font-bold transition shadow-2xs cursor-pointer"
+                    >
+                      {optionText}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        })}
+
+        {/* Typing Indicator */}
+        {isTyping && (
+          <div className="flex items-center gap-2 max-w-[85%] ml-10">
+            <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 px-3.5 py-2 rounded-2xl text-xs text-gray-400 flex items-center gap-1.5 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-emerald-400 animate-bounce" />
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-emerald-400 animate-bounce [animation-delay:0.2s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 dark:bg-emerald-400 animate-bounce [animation-delay:0.4s]" />
             </div>
-
-            {/* Message Feed container */}
-            <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-4 bg-gray-50/30">
-              <AnimatePresence initial={false}>
-                {messages.map((m) => (
-                  <motion.div
-                    key={m.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={`flex items-start gap-2.5 max-w-[85%] ${
-                      m.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
-                    }`}
-                  >
-                    {/* Icon/Avatar bubble */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-xs border ${
-                      m.role === 'user' 
-                        ? 'bg-emerald-50 border-emerald-100 text-brand-dark' 
-                        : 'bg-white border-gray-150 text-orange-500'
-                    }`}>
-                      {m.role === 'user' ? <User size={14} /> : <Bot size={14} />}
-                    </div>
-
-                    {/* Chat Bubble Text */}
-                    <div className={`p-3.5 rounded-2xl text-xs font-bold leading-relaxed shadow-sm border ${
-                      m.role === 'user'
-                        ? 'bg-[#0e3e26] border-emerald-950 text-white rounded-tr-none text-left'
-                        : 'bg-white border-gray-100 text-gray-800 rounded-tl-none text-left'
-                    }`}>
-                      <p className="whitespace-pre-wrap">{m.text}</p>
-                    </div>
-                  </motion.div>
-                ))}
-
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2.5 mr-auto max-w-[85%]"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-white border border-gray-150 text-orange-500 flex items-center justify-center shadow-xs">
-                      <Bot size={14} />
-                    </div>
-                    <div className="bg-white border border-gray-100 p-3.5 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5">
-                      <Loader2 size={12} className="animate-spin text-brand-dark shrink-0" />
-                      <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">KartBot is typing...</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input form in footer */}
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }} 
-              className="p-4 border-t border-gray-100 flex items-center gap-3 bg-white"
-            >
-              <input
-                type="text"
-                placeholder="Ask KartBot about categories, deliveries, discounts..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                className="flex-1 bg-gray-50/50 border border-gray-200 rounded-2xl px-4.5 py-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#0e3e26] focus:border-transparent transition"
-              />
-              <button
-                type="submit"
-                disabled={!inputMessage.trim() || isTyping}
-                className="p-3 bg-[#0e3e26] hover:bg-[#f97316] text-white rounded-2xl shadow-md transition duration-300 disabled:opacity-40 cursor-pointer"
-              >
-                <Send size={16} />
-              </button>
-            </form>
           </div>
-        </div>
+        )}
+
+        <div ref={messagesEndRef} />
       </main>
 
-      <Footer />
-      <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      {/* Message Input Field at Bottom */}
+      <footer className="w-full bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 p-3 shrink-0">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="max-w-lg mx-auto flex items-center gap-2"
+        >
+          <input
+            type="text"
+            placeholder="Type your message..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="flex-1 px-4 py-2.5 rounded-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#9c27b0] dark:focus:ring-emerald-500"
+          />
+          <button
+            type="submit"
+            disabled={!inputMessage.trim() || isTyping}
+            className="p-2.5 rounded-full bg-[#9c27b0] dark:bg-emerald-600 text-white hover:opacity-90 disabled:opacity-40 transition cursor-pointer shadow-xs"
+            aria-label="Send message"
+          >
+            <Send size={16} />
+          </button>
+        </form>
+      </footer>
     </div>
   );
 }

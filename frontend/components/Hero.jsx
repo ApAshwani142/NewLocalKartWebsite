@@ -7,7 +7,7 @@ import Link from 'next/link';
 export default function Hero() {
   return (
     <div className="w-full max-w-[95%] mx-auto px-4 md:px-6 pt-4 pb-2">
-      <div className="w-full bg-white dark:bg-slate-900 rounded-[28px] border border-gray-100 dark:border-slate-800 shadow-premium overflow-hidden flex flex-col lg:flex-row items-center transition-colors duration-300">
+      <div className="w-full bg-white dark:bg-slate-900 rounded-[28px] border border-gray-100 dark:border-slate-800 shadow-premium overflow-hidden flex flex-col lg:flex-row items-center">
         
         {/* Left Text Pane */}
         <div className="flex-1 p-7 md:p-10 lg:p-14 flex flex-col items-start text-left gap-5">

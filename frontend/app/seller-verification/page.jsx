@@ -8,7 +8,7 @@ import { ShieldCheck, CheckCircle2, FileText, ArrowRight, Building, Clock, Phone
 
 export default function SellerVerificationPage() {
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 transition-colors duration-300 font-sans">
+    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 font-sans">
       <Header />
 
       <main className="w-full max-w-4xl mx-auto px-4 md:px-6 py-12 flex-1">

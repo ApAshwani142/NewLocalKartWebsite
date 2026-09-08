@@ -57,7 +57,7 @@ export default function StoresPage() {
   );
 
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 transition-colors duration-300 font-sans">
+    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 font-sans">
       <Header onCartClick={() => setIsCartOpen(true)} />
 
       {/* Main Content */}

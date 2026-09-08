@@ -65,7 +65,7 @@ export default function Home() {
   ).slice(0, 4);
 
   return (
-    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 transition-colors duration-300 font-sans">
+    <div className="w-full flex flex-col min-h-screen bg-[#f9fafb] dark:bg-slate-950 font-sans">
       {/* 1. Navbar */}
       <Header onCartClick={() => setIsCartOpen(true)} />
 

@@ -1,15 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { MessageSquareText, ShieldAlert } from 'lucide-react';
 
 export default function ChatbotWidget() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const [showTooltip, setShowTooltip] = useState(false);
   const [showAuthAlert, setShowAuthAlert] = useState(false);
+
+  // Do not render floating widget when user is already on the dedicated chat page
+  if (pathname === '/chatbot') {
+    return null;
+  }
 
   const handleClick = () => {
     if (user) {
@@ -26,9 +32,9 @@ export default function ChatbotWidget() {
 
   return (
     <>
-      {/* Floating Widget Button */}
+      {/* Floating Widget Button (bottom-20 on mobile to stay above bottom navbar without overlap) */}
       <div 
-        className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 flex flex-col items-end gap-2"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >

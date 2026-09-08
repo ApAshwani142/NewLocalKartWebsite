@@ -18,7 +18,7 @@ export default function Footer() {
   };
 
   return (
-    <footer id="footer" className="w-full bg-[#070c14] dark:bg-slate-950 text-slate-400 py-14 px-4 md:px-8 border-t border-slate-800/80 mt-auto font-sans transition-colors duration-300">
+    <footer id="footer" className="w-full bg-[#070c14] dark:bg-slate-950 text-slate-400 py-14 px-4 md:px-8 border-t border-slate-800/80 mt-auto font-sans">
       <div className="max-w-7xl mx-auto flex flex-col gap-12">
         
         {/* Top Newsletter & Brand Banner Row */}

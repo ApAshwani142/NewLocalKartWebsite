@@ -9,31 +9,38 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false);
 
-  // Sync stored theme preference after initial hydration
+  // Sync stored theme preference immediately on mount
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('localkart_theme');
+    let activeTheme = 'light';
     if (saved === 'dark' || saved === 'light') {
-      setTheme(saved);
+      activeTheme = saved;
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
+      activeTheme = 'dark';
     }
+    if (activeTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    setTheme(activeTheme);
   }, []);
 
-  // Apply class to <html> whenever theme changes after mount
-  useEffect(() => {
-    if (!mounted) return;
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
     const root = document.documentElement;
-    if (theme === 'dark') {
+    if (nextTheme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('localkart_theme', theme);
-  }, [theme, mounted]);
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    try {
+      localStorage.setItem('localkart_theme', nextTheme);
+    } catch (e) {
+      // ignore
+    }
+    setTheme(nextTheme);
   };
 
   return (
