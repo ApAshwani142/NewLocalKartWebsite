@@ -13,7 +13,7 @@ async function sendOtpEmail({ email, name, otpCode }) {
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
-  const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || 'e-LocalKart <no-reply@localkart.com>';
+  const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.RESEND_FROM_EMAIL;
   const resendApiKey = process.env.RESEND_API_KEY || process.env.RESEND_KEY_API;
 
   const emailHtml = `
@@ -89,42 +89,55 @@ async function sendOtpEmail({ email, name, otpCode }) {
     };
   }
 
-  // 2. Resend API Transport (if configured)
+  // 2. Resend API Transport (if configured in environment variables)
   if (resendApiKey) {
-    console.log(`[EmailService] Delivering OTP to ${email} via Resend API...`);
-    const fromAddress = process.env.RESEND_FROM_EMAIL || 'e-LocalKart <onboarding@resend.dev>';
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${resendApiKey}`
-      },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [email],
-        subject: `${otpCode} is your e-LocalKart Verification Code`,
-        html: emailHtml
-      })
-    });
+    try {
+      console.log(`[EmailService] Delivering OTP to ${email} via Resend API...`);
+      const rawFrom = (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || process.env.SMTP_FROM || '').trim().replace(/^["']|["']$/g, '');
+      
+      let fromAddress = rawFrom;
+      if (rawFrom && !rawFrom.includes('<') && rawFrom.includes('@')) {
+        fromAddress = `e-LocalKart <${rawFrom}>`;
+      }
 
-    const resData = await response.json();
+      if (!fromAddress) {
+        console.warn('[EmailService] No sender email configured in RESEND_FROM_EMAIL. Falling back to resilient local dispatch...');
+      } else {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey.trim()}`
+          },
+          body: JSON.stringify({
+            from: fromAddress,
+            to: [email],
+            subject: `${otpCode} is your e-LocalKart Verification Code`,
+            html: emailHtml
+          })
+        });
 
-    if (!response.ok) {
-      console.error('[EmailService] Resend API error:', resData);
-      throw new Error(resData.message || 'Resend API delivery failed');
+        const resData = await response.json();
+
+        if (response.ok) {
+          console.log(`[EmailService] Resend API email sent successfully. ID: ${resData.id}`);
+          return {
+            success: true,
+            provider: 'Resend',
+            messageId: resData.id,
+            message: 'OTP delivered via Resend successfully'
+          };
+        }
+
+        console.warn('[EmailService] Resend delivery failed. Falling back to resilient local dispatch...', resData);
+      }
+    } catch (resendError) {
+      console.warn(`[EmailService] Resend exception: ${resendError.message}. Falling back to resilient local dispatch...`);
     }
-
-    console.log(`[EmailService] Resend API email sent successfully. ID: ${resData.id}`);
-    return {
-      success: true,
-      provider: 'Resend',
-      messageId: resData.id,
-      message: 'OTP delivered via Resend successfully'
-    };
   }
 
   // 3. Resilient Fallback Transport
-  console.warn(`[EmailService] WARNING: Neither SMTP_HOST nor RESEND_API_KEY is configured. Initializing resilient fallback delivery for ${email}...`);
+  console.warn(`[EmailService] WARNING: Falling back to resilient delivery for ${email}...`);
   try {
     const testAccount = await nodemailer.createTestAccount();
     const testTransporter = nodemailer.createTransport({
@@ -137,8 +150,10 @@ async function sendOtpEmail({ email, name, otpCode }) {
       }
     });
 
+    const fallbackFrom = (process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || testAccount.user);
+
     const info = await testTransporter.sendMail({
-      from: '"e-LocalKart Auth" support@e-localkart.in',
+      from: fallbackFrom,
       to: email,
       subject: `${otpCode} is your e-LocalKart Verification Code`,
       html: emailHtml
