@@ -6,6 +6,15 @@ import { useCart } from '@/hooks/useCart';
 import { Star, Heart, Plus, Minus, Store, Clock, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const DEFAULT_PRODUCT_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
+
+const getSafeProductImage = (src) => {
+  if (!src || typeof src !== 'string') return DEFAULT_PRODUCT_IMG;
+  const trimmed = src.trim();
+  if (trimmed.startsWith('blob:') || !trimmed.startsWith('http')) return DEFAULT_PRODUCT_IMG;
+  return trimmed;
+};
+
 export default function ProductCard({ product, layout = 'vertical' }) {
   const { cartItems, addToCart, updateQuantity } = useCart();
 
@@ -17,6 +26,8 @@ export default function ProductCard({ product, layout = 'vertical' }) {
   const distanceKm = product.distanceKm !== undefined ? product.distanceKm : 0.8;
   const deliveryTime = product.deliveryTime || '15 mins';
   const isDeliverable = product.isDeliverable !== undefined ? product.isDeliverable : true;
+
+  const resolvedImage = getSafeProductImage(product.image || product.imageUrl);
 
   const handleAdd = () => {
     if (isDeliverable) {
@@ -67,7 +78,7 @@ export default function ProductCard({ product, layout = 'vertical' }) {
             <motion.img
               whileHover={{ scale: 1.08 }}
               transition={{ duration: 0.3 }}
-              src={product.image}
+              src={resolvedImage}
               alt={product.name}
               onError={(e) => {
                 e.target.onerror = null;
@@ -215,7 +226,7 @@ export default function ProductCard({ product, layout = 'vertical' }) {
           <motion.img
             whileHover={{ scale: 1.06 }}
             transition={{ duration: 0.3 }}
-            src={product.image}
+            src={resolvedImage}
             alt={product.name}
             onError={(e) => {
               e.target.onerror = null;

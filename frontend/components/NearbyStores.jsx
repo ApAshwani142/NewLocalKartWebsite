@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { useLocation } from '@/hooks/useLocation';
 import { Store as StoreIcon, Clock, Navigation, Star, ChevronRight, ShoppingBag } from 'lucide-react';
 
+const DEFAULT_STORE_LOGO = 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200';
+
+const getStoreLogo = (logo) => {
+  if (!logo || typeof logo !== 'string') return DEFAULT_STORE_LOGO;
+  const trimmed = logo.trim();
+  if (trimmed.startsWith('blob:') || !trimmed.startsWith('http')) return DEFAULT_STORE_LOGO;
+  return trimmed;
+};
+
 export default function NearbyStores() {
   const { location } = useLocation();
   const [stores, setStores] = useState([]);
@@ -74,7 +83,7 @@ export default function NearbyStores() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {stores.map((store) => {
-          const isClosed = !store.isOpen;
+          const isClosed = store.isOpen === false;
           const isFar = !store.isDeliverable;
 
           return (
@@ -93,8 +102,12 @@ export default function NearbyStores() {
                     <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700 shadow-xs">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={store.logo}
+                        src={getStoreLogo(store.logo)}
                         alt={store.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = DEFAULT_STORE_LOGO;
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>

@@ -84,8 +84,16 @@ export default function StoreDetailsPage({ params: paramsPromise }) {
               <div className="h-44 sm:h-56 w-full relative bg-slate-200 dark:bg-slate-800">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={storeData.store.banner}
+                  src={
+                    storeData.store.banner && !storeData.store.banner.startsWith('blob:')
+                      ? storeData.store.banner
+                      : 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=800'
+                  }
                   alt={storeData.store.name}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=800';
+                  }}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
@@ -99,8 +107,16 @@ export default function StoreDetailsPage({ params: paramsPromise }) {
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 p-1 shadow-xl border-2 border-white dark:border-slate-800 shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={storeData.store.logo}
+                      src={
+                        storeData.store.logo && !storeData.store.logo.startsWith('blob:')
+                          ? storeData.store.logo
+                          : 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200'
+                      }
                       alt={storeData.store.name}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200';
+                      }}
                       className="w-full h-full object-cover rounded-xl"
                     />
                   </div>

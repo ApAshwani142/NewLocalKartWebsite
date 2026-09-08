@@ -6,6 +6,22 @@ import { calculateDistance, estimateDeliveryTime } from '../utils/locationUtils.
 
 const DEFAULT_LAT = 25.556;
 const DEFAULT_LNG = 84.660;
+const DEFAULT_PRODUCT_IMG = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
+const DEFAULT_STORE_LOGO = 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200';
+
+const sanitizeProductImage = (url) => {
+  if (!url || typeof url !== 'string') return DEFAULT_PRODUCT_IMG;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('blob:') || !trimmed.startsWith('http')) return DEFAULT_PRODUCT_IMG;
+  return trimmed;
+};
+
+const sanitizeStoreImage = (url) => {
+  if (!url || typeof url !== 'string') return DEFAULT_STORE_LOGO;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('blob:') || !trimmed.startsWith('http')) return DEFAULT_STORE_LOGO;
+  return trimmed;
+};
 
 // @desc    Get all products (enriched with dynamic store distance & delivery time)
 // @route   GET /api/products
@@ -50,7 +66,7 @@ const getProducts = async (req, res) => {
       const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
       const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
 
-      const resolvedImg = prod.imageUrl || prod.image || '';
+      const resolvedImg = sanitizeProductImage(prod.imageUrl || prod.image);
 
       return {
         ...prod,
@@ -58,7 +74,7 @@ const getProducts = async (req, res) => {
         imageUrl: resolvedImg,
         storeId: storeObj._id || prod.shopId,
         storeName: storeObj.name || prod.storeName || 'Local Partner Store',
-        storeLogo: storeObj.logo || storeObj.imageUrl,
+        storeLogo: sanitizeStoreImage(storeObj.logo || storeObj.imageUrl),
         storeIsOpen: storeObj.isOpen ?? storeObj.isActive ?? true,
         distanceKm,
         deliveryTime,
@@ -108,7 +124,7 @@ const getProductById = async (req, res) => {
     const distanceKm = calculateDistance(userLat, userLng, storeLat, storeLng);
     const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
 
-    const resolvedImg = product.imageUrl || product.image || '';
+    const resolvedImg = sanitizeProductImage(product.imageUrl || product.image);
 
     const enrichedProduct = {
       ...product,
@@ -116,7 +132,7 @@ const getProductById = async (req, res) => {
       imageUrl: resolvedImg,
       storeId: storeObj._id || product.shopId,
       storeName: storeObj.name || product.storeName || 'Local Partner Store',
-      storeLogo: storeObj.logo || storeObj.imageUrl,
+      storeLogo: sanitizeStoreImage(storeObj.logo || storeObj.imageUrl),
       storeIsOpen: storeObj.isOpen ?? storeObj.isActive ?? true,
       distanceKm,
       deliveryTime,

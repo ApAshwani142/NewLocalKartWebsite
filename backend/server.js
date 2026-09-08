@@ -95,6 +95,17 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 
+// Active promotions endpoint (prevents 404 in DealOfTheDay component)
+app.get('/api/promotions/active', (req, res) => {
+  res.json({
+    isActive: false,
+    title: 'Mega Grocery Sale Live Now!',
+    discountText: 'Special discounts on daily essentials!',
+    badge: 'Deal of the Day',
+    expiresInSeconds: 86400
+  });
+});
+
 // Test endpoint
 app.get('/', (req, res) => {
   res.send('e-LocalKart API is running...');

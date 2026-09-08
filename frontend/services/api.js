@@ -42,7 +42,14 @@ export async function apiFetch(endpoint, options = {}) {
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await response.json().catch(() => ({}));
+    } else {
+      const text = await response.text();
+      data = { message: text || `Server responded with status ${response.status}` };
+    }
 
     if (!response.ok) {
       throw new Error(data.message || `API Error (${response.status})`);

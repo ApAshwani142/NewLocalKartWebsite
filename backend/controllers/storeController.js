@@ -6,6 +6,16 @@ import { calculateDistance, estimateDeliveryTime } from '../utils/locationUtils.
 const DEFAULT_LAT = 25.556;
 const DEFAULT_LNG = 84.660;
 
+const DEFAULT_STORE_LOGO = 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=200';
+const DEFAULT_STORE_BANNER = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?q=80&w=800';
+
+const sanitizeStoreImage = (url, fallback) => {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('blob:') || !trimmed.startsWith('http')) return fallback;
+  return trimmed;
+};
+
 // @desc    Get nearby stores sorted by distance
 // @route   GET /api/stores
 // @access  Public
@@ -41,6 +51,10 @@ const getStores = async (req, res) => {
       const { deliveryTime, isDeliverable } = estimateDeliveryTime(distanceKm);
       return {
         ...store,
+        logo: sanitizeStoreImage(store.logo, DEFAULT_STORE_LOGO),
+        banner: sanitizeStoreImage(store.banner, DEFAULT_STORE_BANNER),
+        imageUrl: sanitizeStoreImage(store.imageUrl, DEFAULT_STORE_BANNER),
+        isOpen: store.isOpen !== false,
         distanceKm,
         deliveryTime,
         isDeliverable,
@@ -77,6 +91,8 @@ const getStoreById = async (req, res) => {
     const products = await Product.find({ store: store._id }).lean();
     const enrichedProducts = products.map(prod => ({
       ...prod,
+      image: (prod.image && !prod.image.startsWith('blob:') && prod.image.startsWith('http')) ? prod.image : (prod.imageUrl && !prod.imageUrl.startsWith('blob:') && prod.imageUrl.startsWith('http')) ? prod.imageUrl : 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400',
+      imageUrl: (prod.imageUrl && !prod.imageUrl.startsWith('blob:') && prod.imageUrl.startsWith('http')) ? prod.imageUrl : (prod.image && !prod.image.startsWith('blob:') && prod.image.startsWith('http')) ? prod.image : 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400',
       storeName: store.name,
       distanceKm,
       deliveryTime,
@@ -86,6 +102,10 @@ const getStoreById = async (req, res) => {
     res.json({
       store: {
         ...store,
+        logo: sanitizeStoreImage(store.logo, DEFAULT_STORE_LOGO),
+        banner: sanitizeStoreImage(store.banner, DEFAULT_STORE_BANNER),
+        imageUrl: sanitizeStoreImage(store.imageUrl, DEFAULT_STORE_BANNER),
+        isOpen: store.isOpen !== false,
         distanceKm,
         deliveryTime,
         isDeliverable,
