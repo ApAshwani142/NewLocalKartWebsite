@@ -11,6 +11,7 @@ import RecentlyViewed from '@/components/RecentlyViewed';
 import Footer from '@/components/Footer';
 import CartModal from '@/components/CartModal';
 import LocationToast from '@/components/LocationToast';
+import UnserviceableBanner from '@/components/UnserviceableBanner';
 import { useLocation } from '@/hooks/useLocation';
 import { Sparkles, ShoppingBag, ArrowRight, Navigation, Flame, Star } from 'lucide-react';
 
@@ -20,10 +21,14 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isUnserviceable, setIsUnserviceable] = useState(false);
 
   const API_URL = '/api';
 
   useEffect(() => {
+    // Don't fetch until location is resolved (prevents stale default coordinates)
+    if (!location.isLoaded) return;
+
     const fetchProducts = async () => {
       setLoading(true);
       try {
@@ -36,6 +41,9 @@ export default function Home() {
           const data = await res.json();
           if (Array.isArray(data)) {
             setProducts(data);
+            // Check if ALL products are undeliverable (area-level unserviceable)
+            const allUndeliverable = data.length > 0 && data.every(p => p.isDeliverable === false);
+            setIsUnserviceable(allUndeliverable);
           }
         }
       } catch (error) {
@@ -46,7 +54,7 @@ export default function Home() {
     };
 
     fetchProducts();
-  }, [location.lat, location.lng, API_URL]);
+  }, [location.isLoaded, location.lat, location.lng, API_URL]);
 
   // Filter products by selected category
   const filteredProducts = selectedCategory
@@ -85,6 +93,11 @@ export default function Home() {
       </div>
 
       {/* Main Shopping Stream */}
+      {isUnserviceable ? (
+        <main className="w-full max-w-[95%] mx-auto px-4 md:px-6 py-6">
+          <UnserviceableBanner />
+        </main>
+      ) : (
       <main className="w-full max-w-[95%] mx-auto px-4 md:px-6 py-6">
         <div className="w-full flex flex-col gap-10">
           
@@ -196,6 +209,7 @@ export default function Home() {
 
         </div>
       </main>
+      )}
 
       {/* 9. Footer */}
       <Footer />

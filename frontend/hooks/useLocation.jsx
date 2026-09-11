@@ -218,7 +218,8 @@ export function LocationProvider({ children }) {
         locationError,
         isLocationPickerOpen,
         setIsLocationPickerOpen,
-        toast
+        toast,
+        hideToast: () => setToast({ show: false, area: '', city: '' })
       }}
     >
       {children}

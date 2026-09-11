@@ -22,6 +22,9 @@ export default function NearbyStores() {
   const API_URL = '/api';
 
   useEffect(() => {
+    // Don't fetch until location is resolved (prevents stale default coordinates)
+    if (!location.isLoaded) return;
+
     const fetchStores = async () => {
       setLoading(true);
       try {
@@ -43,7 +46,7 @@ export default function NearbyStores() {
     };
 
     fetchStores();
-  }, [location.lat, location.lng, API_URL]);
+  }, [location.isLoaded, location.lat, location.lng, API_URL]);
 
   if (loading) {
     return (

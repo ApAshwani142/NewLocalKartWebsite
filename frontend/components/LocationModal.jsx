@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useLocation, PRESET_LOCATIONS } from '@/hooks/useLocation';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +24,7 @@ export default function LocationModal({ isOpen, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [apiResults, setApiResults] = useState([]);
   const [isSearchingApi, setIsSearchingApi] = useState(false);
+  const debounceRef = useRef(null);
 
   // Dynamic Saved Addresses from MongoDB
   const [savedDbAddresses, setSavedDbAddresses] = useState([]);
@@ -54,46 +55,54 @@ export default function LocationModal({ isOpen, onClose }) {
   }, [isOpen, token]);
 
   // Debounced search for online autocomplete via OpenStreetMap
+  const fetchNominatim = useCallback((query) => {
+    setIsSearchingApi(true);
+    fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+        query
+      )}&countrycodes=in&limit=5`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const formatted = data.map((item) => {
+            const nameParts = item.display_name.split(',');
+            const area = nameParts[0] ? nameParts[0].trim() : query;
+            const city = nameParts[1] ? nameParts[1].trim() : 'Bihar';
+            return {
+              area,
+              city,
+              pincode: '802301',
+              lat: parseFloat(item.lat),
+              lng: parseFloat(item.lon),
+              displayName: item.display_name
+            };
+          });
+          setApiResults(formatted);
+        }
+      })
+      .catch(() => setApiResults([]))
+      .finally(() => setIsSearchingApi(false));
+  }, []);
+
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
 
-    if (query.trim().length >= 3) {
-      setIsSearchingApi(true);
-      fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          query
-        )}&countrycodes=in&limit=5`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            const formatted = data.map((item) => {
-              const nameParts = item.display_name.split(',');
-              const area = nameParts[0] ? nameParts[0].trim() : query;
-              const city = nameParts[1] ? nameParts[1].trim() : 'Bihar';
-              return {
-                area,
-                city,
-                pincode: '802301',
-                lat: parseFloat(item.lat),
-                lng: parseFloat(item.lon),
-                displayName: item.display_name
-              };
-            });
-            setApiResults(formatted);
-          }
-        })
-        .catch(() => setApiResults([]))
-        .finally(() => setIsSearchingApi(false));
+    // Clear previous debounce timer
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.trim().length >= 2) {
+      debounceRef.current = setTimeout(() => fetchNominatim(query), 400);
     } else {
       setApiResults([]);
+      setIsSearchingApi(false);
     }
   };
 
   // Preset location search filtering
   const filteredPresets = useMemo(() => {
-    if (!searchQuery.trim()) return PRESET_LOCATIONS;
+    if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
     return PRESET_LOCATIONS.filter(
       (item) =>
@@ -388,8 +397,8 @@ export default function LocationModal({ isOpen, onClose }) {
               </div>
             )}
 
-            {/* Nearby Areas Presets */}
-            <div>
+            {/* Nearby Areas Presets — only shown when user is searching */}
+            {filteredPresets.length > 0 && (<div>
               <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                 <Building2 size={13} className="text-emerald-600" /> Nearby Markets & Areas
               </p>
@@ -426,7 +435,7 @@ export default function LocationModal({ isOpen, onClose }) {
                   );
                 })}
               </div>
-            </div>
+            </div>)}
           </div>
         </motion.div>
       </div>
