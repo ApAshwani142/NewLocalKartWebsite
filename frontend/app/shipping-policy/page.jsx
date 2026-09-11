@@ -6,10 +6,13 @@ import { Truck, Navigation, Clock, ShieldCheck, MapPin, AlertTriangle } from 'lu
 export const metadata = {
   title: 'Hyperlocal Shipping & Delivery Policy | e-LocalKart',
   description: 'Understand e-LocalKart express 15-45 minute hyperlocal delivery radius, delivery fees, live GPS tracking, and delivery guidelines across Bihar.',
+  alternates: {
+    canonical: '/shipping-policy',
+  },
   openGraph: {
     title: 'Hyperlocal Shipping & Delivery Policy - e-LocalKart',
     description: 'Express 15-45 minute delivery rules, service radius, and charges on e-LocalKart.',
-    url: 'https://elocalkart.com/shipping-policy',
+    url: 'https://www.e-localkart.in/shipping-policy',
     type: 'website',
   },
   twitter: {

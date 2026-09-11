@@ -6,10 +6,13 @@ import { ShieldCheck, FileText, Scale, Lock, Clock, AlertTriangle } from 'lucide
 export const metadata = {
   title: 'Terms & Conditions | e-LocalKart Hyperlocal Platform',
   description: 'Read the official Terms and Conditions governing your use of e-LocalKart hyperlocal commerce platform in India.',
+  alternates: {
+    canonical: '/terms-and-conditions',
+  },
   openGraph: {
     title: 'Terms & Conditions - e-LocalKart',
     description: 'Terms of service, user guidelines, and shopkeeper policies for e-LocalKart hyperlocal ordering.',
-    url: 'https://elocalkart.com/terms-and-conditions',
+    url: 'https://www.e-localkart.in/terms-and-conditions',
     type: 'website',
   },
   twitter: {

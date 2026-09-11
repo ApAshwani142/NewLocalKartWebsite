@@ -7,10 +7,13 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Careers & Openings | Build the Future of Hyperlocal Commerce - e-LocalKart',
   description: 'Join the e-LocalKart engineering, product, operations, and logistics teams. Help build India’s premier hyperlocal Kirana commerce platform.',
+  alternates: {
+    canonical: '/careers',
+  },
   openGraph: {
     title: 'Careers at e-LocalKart',
     description: 'Join e-LocalKart team and empower local Kirana businesses in India.',
-    url: 'https://elocalkart.com/careers',
+    url: 'https://www.e-localkart.in/careers',
     type: 'website',
   },
 };

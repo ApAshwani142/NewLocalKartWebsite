@@ -8,10 +8,13 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Contact Us | Customer Support & Helpline - e-LocalKart',
   description: 'Get in touch with e-LocalKart customer support team via phone, email, or live inquiry form. Operating hours: 8 AM - 10 PM IST.',
+  alternates: {
+    canonical: '/contact-us',
+  },
   openGraph: {
     title: 'Contact Us - e-LocalKart Customer Support',
     description: 'Reach e-LocalKart support desk for order queries, shopkeeper onboarding, or delivery assistance.',
-    url: 'https://elocalkart.com/contact-us',
+    url: 'https://www.e-localkart.in/contact-us',
     type: 'website',
   },
   twitter: {

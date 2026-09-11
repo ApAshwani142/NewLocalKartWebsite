@@ -6,10 +6,13 @@ import { Store, Rocket, ShieldCheck, Heart, Zap, Award, Target, Users, MapPin } 
 export const metadata = {
   title: 'About Us | Empowering Local Businesses - e-LocalKart',
   description: 'Discover how e-LocalKart is revolutionizing hyperlocal quick commerce in India by connecting customers with neighborhood stores and Kirana shops.',
+  alternates: {
+    canonical: '/about-us',
+  },
   openGraph: {
     title: 'About Us - e-LocalKart Hyperlocal Commerce',
     description: 'Empowering local Kirana storekeepers in Bihar and India with cutting-edge hyperlocal technology and same-hour doorstep delivery.',
-    url: 'https://elocalkart.com/about-us',
+    url: 'https://www.e-localkart.in/about-us',
     type: 'website',
   },
   twitter: {

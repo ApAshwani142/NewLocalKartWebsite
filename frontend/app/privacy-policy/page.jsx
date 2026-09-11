@@ -6,10 +6,13 @@ import { Shield, Lock, Eye, Database, MapPin, Key, Trash2, Mail, ExternalLink } 
 export const metadata = {
   title: 'Privacy Policy | e-LocalKart Hyperlocal Platform',
   description: 'Learn how e-LocalKart collects, protects, processes, and manages user personal data and location information in compliance with Indian IT regulations.',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
   openGraph: {
     title: 'Privacy Policy - e-LocalKart',
     description: 'Data security, privacy rights, location permissions, and account deletion policies for e-LocalKart.',
-    url: 'https://elocalkart.com/privacy-policy',
+    url: 'https://www.e-localkart.in/privacy-policy',
     type: 'website',
   },
   twitter: {

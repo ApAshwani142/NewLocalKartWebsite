@@ -6,10 +6,13 @@ import { Cookie, Lock, Eye, Database } from 'lucide-react';
 export const metadata = {
   title: 'Cookie Policy | e-LocalKart Hyperlocal Platform',
   description: 'Understand how e-LocalKart utilizes essential cookies and local storage to store session data, cart contents, and location coordinates.',
+  alternates: {
+    canonical: '/cookie-policy',
+  },
   openGraph: {
     title: 'Cookie Policy - e-LocalKart',
     description: 'Cookie usage and local storage guidelines for e-LocalKart platform.',
-    url: 'https://elocalkart.com/cookie-policy',
+    url: 'https://www.e-localkart.in/cookie-policy',
     type: 'website',
   },
 };

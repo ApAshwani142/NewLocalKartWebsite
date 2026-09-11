@@ -6,10 +6,13 @@ import { RefreshCw, CheckCircle2, AlertCircle, Clock, Ban, HelpCircle } from 'lu
 export const metadata = {
   title: 'Refund & Return Policy | e-LocalKart Hyperlocal Platform',
   description: 'Understand e-LocalKart refund eligibility, replacement request procedures, damaged product returns, order cancellations, and processing SLAs.',
+  alternates: {
+    canonical: '/refund-policy',
+  },
   openGraph: {
     title: 'Refund & Return Policy - e-LocalKart',
     description: 'Instant refunds, hassle-free returns, and customer protection guidelines on e-LocalKart.',
-    url: 'https://elocalkart.com/refund-policy',
+    url: 'https://www.e-localkart.in/refund-policy',
     type: 'website',
   },
   twitter: {

@@ -6,10 +6,13 @@ import { XCircle, Clock, AlertTriangle, ShieldCheck } from 'lucide-react';
 export const metadata = {
   title: 'Cancellation Policy | e-LocalKart Hyperlocal Platform',
   description: 'Understand e-LocalKart order cancellation rules, window timeframes, store packing SLA, and cancellation fee policy.',
+  alternates: {
+    canonical: '/cancellation-policy',
+  },
   openGraph: {
     title: 'Cancellation Policy - e-LocalKart',
     description: 'Cancellation window, terms, and fee structures for e-LocalKart customers.',
-    url: 'https://elocalkart.com/cancellation-policy',
+    url: 'https://www.e-localkart.in/cancellation-policy',
     type: 'website',
   },
 };

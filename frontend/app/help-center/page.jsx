@@ -7,10 +7,13 @@ import { HelpCircle } from 'lucide-react';
 export const metadata = {
   title: 'Help Center & Frequently Asked Questions | e-LocalKart',
   description: 'Find instant answers to FAQs regarding e-LocalKart order tracking, payment modes, hyperlocal delivery times, refund SLA, account management, and service location.',
+  alternates: {
+    canonical: '/help-center',
+  },
   openGraph: {
     title: 'Help Center & FAQs - e-LocalKart',
     description: 'Instant answers for e-LocalKart orders, payments, delivery SLA, returns, and location support.',
-    url: 'https://elocalkart.com/help-center',
+    url: 'https://www.e-localkart.in/help-center',
     type: 'website',
   },
   twitter: {

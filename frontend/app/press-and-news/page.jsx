@@ -7,10 +7,13 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Press & Newsroom | e-LocalKart Updates',
   description: 'Latest media releases, company announcements, and blog stories from e-LocalKart.',
+  alternates: {
+    canonical: '/press-and-news',
+  },
   openGraph: {
     title: 'Press & News - e-LocalKart',
     description: 'Latest news and media coverage of e-LocalKart in India.',
-    url: 'https://elocalkart.com/press-and-news',
+    url: 'https://www.e-localkart.in/press-and-news',
     type: 'website',
   },
 };

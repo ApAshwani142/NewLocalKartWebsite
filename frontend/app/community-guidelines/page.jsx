@@ -6,10 +6,13 @@ import { Users, Heart, ShieldCheck } from 'lucide-react';
 export const metadata = {
   title: 'Community Guidelines | e-LocalKart Hyperlocal Platform',
   description: 'Community standards for respectful interactions between customers, shopkeepers, and delivery partners on e-LocalKart.',
+  alternates: {
+    canonical: '/community-guidelines',
+  },
   openGraph: {
     title: 'Community Guidelines - e-LocalKart',
     description: 'Guidelines for respectful commerce on e-LocalKart.',
-    url: 'https://elocalkart.com/community-guidelines',
+    url: 'https://www.e-localkart.in/community-guidelines',
     type: 'website',
   },
 };

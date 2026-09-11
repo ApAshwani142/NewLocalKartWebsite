@@ -6,10 +6,13 @@ import { ShieldCheck, RefreshCw, Award, Lock } from 'lucide-react';
 export const metadata = {
   title: 'Buyer Protection Policy | 100% Satisfaction Guarantee - e-LocalKart',
   description: 'e-LocalKart Buyer Protection ensures genuine products, 100% money-back guarantee for spoiled goods, and secure digital payments.',
+  alternates: {
+    canonical: '/buyer-protection',
+  },
   openGraph: {
     title: 'Buyer Protection Guarantee - e-LocalKart',
     description: 'Freshness guarantee and buyer protection rules on e-LocalKart.',
-    url: 'https://elocalkart.com/buyer-protection',
+    url: 'https://www.e-localkart.in/buyer-protection',
     type: 'website',
   },
 };

@@ -6,10 +6,13 @@ import { ShieldCheck, Lock, Key, Server, Cpu } from 'lucide-react';
 export const metadata = {
   title: 'Platform Security & Infrastructure | e-LocalKart',
   description: 'Discover how e-LocalKart safeguards user credentials, payment details, and geolocation data using PCI-DSS, AES-256, and Cloudflare WAF.',
+  alternates: {
+    canonical: '/security',
+  },
   openGraph: {
     title: 'Platform Security - e-LocalKart',
     description: 'Bank-grade security and data encryption standards on e-LocalKart.',
-    url: 'https://elocalkart.com/security',
+    url: 'https://www.e-localkart.in/security',
     type: 'website',
   },
 };
