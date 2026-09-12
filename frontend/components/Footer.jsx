@@ -124,15 +124,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 6: Trust */}
+          {/* Column 5: Trust & Partners */}
           <div className="flex flex-col gap-3">
             <h4 className="text-xs font-black uppercase tracking-widest text-emerald-500">
-              Trust
+              Trust & Partners
             </h4>
             <ul className="flex flex-col gap-2 text-xs font-bold">
               <li><Link href="/security" className="hover:text-white transition">Security</Link></li>
-              <li><Link href="/community-guidelines" className="hover:text-white transition">Community Guidelines</Link></li>
               <li><Link href="/seller-verification" className="hover:text-white transition">Seller Verification</Link></li>
+              <li><a href="https://merchant.e-localkart.in/register-shopkeeper" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Register your shop on e-LocalKart</a></li>
+              <li><a href="https://merchant.e-localkart.in/register-delivery" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Become an e-LocalKart delivery partner</a></li>
               <li><Link href="/buyer-protection" className="hover:text-white transition">Buyer Protection</Link></li>
             </ul>
           </div>

@@ -20,14 +20,17 @@ const inter = Inter({
 
 export const metadata = {
   metadataBase: new URL('https://www.e-localkart.in'),
-  title: "e-LocalKart - Same-hour Delivery from Local Stores",
-  description: "Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.",
+  title: {
+    default: "e-LocalKart - Same-hour Delivery from Local Stores",
+    template: "%s | e-LocalKart",
+  },
+  description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: "e-LocalKart - Same-hour Delivery from Local Stores",
-    description: "Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.",
+    description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
     url: 'https://www.e-localkart.in/',
     siteName: 'e-LocalKart',
     locale: 'en_IN',
@@ -36,13 +39,59 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "e-LocalKart - Same-hour Delivery from Local Stores",
-    description: "Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.",
+    description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
   },
+};
+
+const organizationAndWebsiteSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://www.e-localkart.in/#organization",
+      "name": "e-LocalKart",
+      "alternateName": [
+        "elocalkart",
+        "LocalKart",
+        "e local kart",
+        "e-local kart"
+      ],
+      "url": "https://www.e-localkart.in",
+      "logo": {
+        "@type": "ImageObject",
+        "@id": "https://www.e-localkart.in/#logo",
+        "url": "https://www.e-localkart.in/assets/Logo.png",
+        "caption": "e-LocalKart"
+      },
+      "description": "e-LocalKart (LocalKart / elocalkart) connects consumers with verified neighborhood Kirana stores for express 15-45 minute doorstep delivery."
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.e-localkart.in/#website",
+      "url": "https://www.e-localkart.in",
+      "name": "e-LocalKart",
+      "alternateName": [
+        "elocalkart",
+        "LocalKart",
+        "e local kart",
+        "e-local kart"
+      ],
+      "publisher": {
+        "@id": "https://www.e-localkart.in/#organization"
+      }
+    }
+  ]
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationAndWebsiteSchema) }}
+        />
+      </head>
       <body className="font-sans antialiased min-h-screen flex flex-col pb-16 md:pb-0">
         <ThemeProvider>
           <LocationProvider>

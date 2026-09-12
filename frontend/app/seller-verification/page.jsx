@@ -68,12 +68,12 @@ export default function SellerVerificationPage() {
           </div>
 
           <a
-            href="https://local-kart-shop-agent-4vgq-six.vercel.app/register-shopkeeper"
+            href="https://merchant.e-localkart.in/register-shopkeeper"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-2xl text-xs font-black uppercase tracking-wider transition shadow-lg shrink-0 cursor-pointer"
           >
-            Register Your Shop
+            Register Your Shop on e-LocalKart
             <ArrowRight size={16} />
           </a>
         </div>

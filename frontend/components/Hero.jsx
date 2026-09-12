@@ -28,7 +28,7 @@ export default function Hero() {
           
           {/* Subheading Answering What Makes e-LocalKart Different */}
           <p className="text-slate-600 dark:text-slate-300 font-medium text-xs sm:text-sm md:text-base max-w-lg leading-relaxed">
-            e-LocalKart connects you directly to verified neighborhood Kirana shops, bakeries, and fresh produce markets. Delivered in <strong>15–45 minutes</strong> while empowering your local community.
+            e-LocalKart (LocalKart / elocalkart) connects you directly to verified neighborhood Kirana shops, bakeries, and fresh produce markets. Delivered in <strong>15–45 minutes</strong> while empowering your local community.
           </p>
 
           {/* Action Buttons */}

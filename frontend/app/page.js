@@ -2,13 +2,13 @@ import HomePageClient from '@/components/HomePageClient';
 
 export const metadata = {
   title: 'e-LocalKart - Same-hour Delivery from Local Stores',
-  description: 'Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.',
+  description: 'Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'e-LocalKart - Same-hour Delivery from Local Stores',
-    description: 'Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.',
+    description: 'Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.',
     url: 'https://www.e-localkart.in/',
     siteName: 'e-LocalKart',
     locale: 'en_IN',
@@ -17,7 +17,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'e-LocalKart - Same-hour Delivery from Local Stores',
-    description: 'Get fresh groceries and daily essentials delivered to your doorstep in 40 minutes.',
+    description: 'Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.',
   },
 };
 
