@@ -28,11 +28,28 @@ export const metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: [
+      { url: '/icon.png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/assets/Logo.png',
+  },
   openGraph: {
     title: "e-LocalKart - Same-hour Delivery from Local Stores",
     description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
     url: 'https://www.e-localkart.in/',
     siteName: 'e-LocalKart',
+    images: [
+      {
+        url: '/assets/Logo.png',
+        width: 1456,
+        height: 1080,
+        alt: 'e-LocalKart Logo',
+      },
+    ],
     locale: 'en_IN',
     type: 'website',
   },
@@ -40,6 +57,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: "e-LocalKart - Same-hour Delivery from Local Stores",
     description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
+    images: ['/assets/Logo.png'],
   },
 };
 

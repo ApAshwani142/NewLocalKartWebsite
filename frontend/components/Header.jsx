@@ -48,11 +48,16 @@ export default function Header({ onCartClick }) {
           <div className="w-full max-w-[95%] mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-5">
             {/* Logo & Location */}
             <div className="flex items-center gap-4 shrink-0">
-              <Link href="/" className="flex items-center">
+              <Link href="/" className="flex items-center gap-2 group">
                 <div
-                  className="relative flex items-center justify-center p-2 rounded-xl border shadow-xs"
-                  style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
+                  className="relative flex items-center gap-2 p-1.5 px-2.5 rounded-xl border shadow-xs bg-white dark:bg-slate-900"
+                  style={{ borderColor: 'var(--border-color)' }}
                 >
+                  <img
+                    src="/assets/Logo.png"
+                    alt="e-LocalKart Logo"
+                    className="h-8 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                  />
                   <span className="text-orange-500 font-extrabold text-2xl tracking-tighter flex items-center gap-0.5">
                     e-
                     <span className="text-[#0e3e26] dark:text-emerald-400 font-black italic">Local</span>
@@ -201,10 +206,15 @@ export default function Header({ onCartClick }) {
             {/* Logo */}
             <Link href="/" className="shrink-0 flex items-center">
               <div
-                className="flex items-center justify-center px-2 py-1 rounded-xl border shadow-xs"
-                style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-xl border shadow-xs bg-white dark:bg-slate-900"
+                style={{ borderColor: 'var(--border-color)' }}
               >
-                <span className="text-orange-500 font-extrabold text-xl tracking-tighter flex items-center gap-0.5">
+                <img
+                  src="/assets/Logo.png"
+                  alt="e-LocalKart Logo"
+                  className="h-6 w-auto object-contain"
+                />
+                <span className="text-orange-500 font-extrabold text-lg tracking-tighter flex items-center gap-0.5">
                   e-
                   <span className="text-[#0e3e26] dark:text-emerald-400 font-black italic">Local</span>
                   <span className="text-[#e25822]">Kart</span>
@@ -297,6 +307,9 @@ export default function Header({ onCartClick }) {
           {/* Header of Drawer */}
           <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
             <div className="flex items-center gap-2">
+              <div className="p-1 rounded-lg border bg-white dark:bg-slate-900" style={{ borderColor: 'var(--border-color)' }}>
+                <img src="/assets/Logo.png" alt="e-LocalKart Logo" className="h-6 w-auto object-contain" />
+              </div>
               <span className="text-orange-500 font-black text-xl tracking-tighter">e-LocalKart</span>
             </div>
             <button
