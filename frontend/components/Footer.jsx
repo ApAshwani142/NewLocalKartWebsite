@@ -181,7 +181,12 @@ export default function Footer() {
 
         {/* Bottom Footer Bar */}
         <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500">
-          <p>© 2026 e-LocalKart. All Rights Reserved.</p>
+          <div className="flex items-center gap-2.5">
+            <div className="bg-white p-1 rounded-lg">
+              <img src="/assets/Logo.png" alt="e-LocalKart Logo" className="h-5 w-auto object-contain" />
+            </div>
+            <p>© 2026 e-LocalKart. All Rights Reserved.</p>
+          </div>
           <p className="flex items-center gap-1.5 text-slate-400">
             Made with <Heart size={14} className="text-red-500 fill-red-500" /> in India to empower local businesses.
           </p>

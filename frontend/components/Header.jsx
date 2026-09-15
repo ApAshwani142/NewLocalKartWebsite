@@ -204,8 +204,9 @@ export default function Header({ onCartClick }) {
           {/* Top Row: Logo, Address, Menu Toggle */}
           <div className="w-full flex items-center justify-between gap-2">
             {/* Logo */}
-            <Link href="/" className="shrink-0 flex items-center">
+            <Link href="/" className="shrink-0 flex items-center gap-1.5">
               <div
+<<<<<<< HEAD
                 className="flex items-center gap-1.5 px-2 py-1 rounded-xl border shadow-xs bg-white dark:bg-slate-900"
                 style={{ borderColor: 'var(--border-color)' }}
               >
@@ -219,7 +220,18 @@ export default function Header({ onCartClick }) {
                   <span className="text-[#0e3e26] dark:text-emerald-400 font-black italic">Local</span>
                   <span className="text-[#e25822]">Kart</span>
                 </span>
+=======
+                className="flex items-center justify-center p-1 rounded-xl border shadow-xs bg-white dark:bg-slate-900"
+                style={{ borderColor: 'var(--border-color)' }}
+              >
+                <img src="/assets/Logo.png" alt="e-LocalKart" className="h-7 w-auto object-contain" />
+>>>>>>> fab1373 (feat: update official e-LocalKart logo across frontend and metadata)
               </div>
+              <span className="text-orange-500 font-extrabold text-lg tracking-tighter flex items-center gap-0.5">
+                e-
+                <span className="text-[#0e3e26] dark:text-emerald-400 font-black italic">Local</span>
+                <span className="text-[#e25822]">Kart</span>
+              </span>
             </Link>
 
             {/* Address Selection (Center) */}

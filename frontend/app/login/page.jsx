@@ -178,7 +178,8 @@ function LoginPageForm() {
         {/* 1. Header Logo */}
         <div className="w-full flex items-center justify-between z-10">
           <Link href="/" className="group flex items-center gap-2 transition transform active:scale-95">
-            <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border border-white/20 flex items-center justify-center">
+            <div className="bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-lg border border-white/20 flex items-center justify-center gap-2">
+              <img src="/assets/Logo.png" alt="e-LocalKart Logo" className="h-7 w-auto object-contain" />
               <span className="text-amber-500 font-extrabold text-xl tracking-tighter flex items-center gap-0.5">
                 e-
                 <span className="text-[#0e3e26] font-black italic">Local</span>

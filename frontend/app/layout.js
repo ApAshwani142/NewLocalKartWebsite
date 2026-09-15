@@ -28,13 +28,17 @@ export const metadata = {
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: '/assets/Logo.png',
+    shortcut: '/assets/Logo.png',
+    apple: '/assets/Logo.png',
+  },
   openGraph: {
     title: "e-LocalKart - Same-hour Delivery from Local Stores",
     description: "Order fresh groceries and daily essentials on e-LocalKart (LocalKart / elocalkart) from trusted neighborhood stores with 40-minute doorstep delivery.",
     url: 'https://www.e-localkart.in/',
     siteName: 'e-LocalKart',
     images: [
-      {
         url: '/assets/Logo.png',
         width: 1456,
         height: 1080,

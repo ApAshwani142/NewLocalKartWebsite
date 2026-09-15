@@ -10,14 +10,15 @@ export default function CheckoutHeader({ onBackToCart }) {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
         {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-[#105634] px-3.5 py-1.5 md:px-4 md:py-2 rounded-xl shadow-md flex items-center justify-center transition-transform group-hover:scale-[1.02]">
-            <span className="text-orange-400 font-extrabold text-lg md:text-xl tracking-tighter flex items-center gap-0.5">
-              e-
-              <span className="text-white font-black italic">Local</span>
-              <span className="text-orange-400">Kart</span>
-            </span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="bg-white border border-slate-200 p-1 rounded-xl shadow-xs flex items-center justify-center transition-transform group-hover:scale-[1.02]">
+            <img src="/assets/Logo.png" alt="e-LocalKart" className="h-8 w-auto object-contain" />
           </div>
+          <span className="text-orange-500 font-extrabold text-lg md:text-xl tracking-tighter flex items-center gap-0.5">
+            e-
+            <span className="text-[#0e3e26] font-black italic">Local</span>
+            <span className="text-orange-500">Kart</span>
+          </span>
         </Link>
 
         {/* Center/Right: Secure Checkout Badge & Quick Back link */}
