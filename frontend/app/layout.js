@@ -39,6 +39,7 @@ export const metadata = {
     url: 'https://www.e-localkart.in/',
     siteName: 'e-LocalKart',
     images: [
+      {
         url: '/assets/Logo.png',
         width: 1456,
         height: 1080,
